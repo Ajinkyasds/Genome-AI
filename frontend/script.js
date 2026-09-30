@@ -379,9 +379,22 @@
   }
 
   function initHeader() {
-    $("menuButton")?.addEventListener("click", () => $("mobileDrawer")?.classList.toggle("hidden"));
-    $$("#mobileDrawer a").forEach(link => link.addEventListener("click", () => $("mobileDrawer")?.classList.add("hidden")));
+   const menuButton = $("menuButton");
+const mobileDrawer = $("mobileDrawer");
 
+menuButton?.addEventListener("click", () => {
+  if (!mobileDrawer) return;
+
+  const isOpen = mobileDrawer.style.display === "flex";
+
+  mobileDrawer.style.display = isOpen ? "none" : "flex";
+});
+
+$$("#mobileDrawer a").forEach(link => {
+  link.addEventListener("click", () => {
+    if (mobileDrawer) mobileDrawer.style.display = "none";
+  });
+});
     $("commandButton")?.addEventListener("click", () => {
       $("commandPalette")?.classList.remove("hidden");
       $("paletteInput")?.focus();
