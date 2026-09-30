@@ -384,13 +384,19 @@ console.log("GENOMEAI HEADER LOADED");
    const menuButton = $("menuButton");
 const mobileDrawer = $("mobileDrawer");
 
-menuButton?.addEventListener("click", () => {
-  if (!mobileDrawer) return;
+if (menuButton && mobileDrawer && !menuButton.dataset.drawerBound) {
 
-  const isOpen = mobileDrawer.style.display === "flex";
+  menuButton.dataset.drawerBound = "true";
 
-  mobileDrawer.style.display = isOpen ? "none" : "flex";
-});
+  menuButton.addEventListener("click", () => {
+
+    const isOpen = mobileDrawer.style.display === "flex";
+
+    mobileDrawer.style.display = isOpen ? "none" : "flex";
+
+  });
+
+}
 
 $$("#mobileDrawer a").forEach(link => {
   link.addEventListener("click", () => {
