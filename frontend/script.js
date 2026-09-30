@@ -379,6 +379,8 @@
   }
 
   function initHeader() {
+console.log("GENOMEAI HEADER LOADED");
+
    const menuButton = $("menuButton");
 const mobileDrawer = $("mobileDrawer");
 
