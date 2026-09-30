@@ -378,59 +378,133 @@
     toast("Workspace reset.");
   }
 
-  function initHeader() {
-console.log("GENOMEAI HEADER LOADED");
+  
+function initHeader() {
 
-   const menuButton = $("menuButton");
-const mobileDrawer = $("mobileDrawer");
+    console.log("GENOMEAI HEADER LOADED");
 
-if (menuButton && mobileDrawer && !menuButton.dataset.drawerBound) {
+    const menuButton = $("menuButton");
+    const mobileDrawer = $("mobileDrawer");
 
-  menuButton.dataset.drawerBound = "true";
 
-  menuButton.addEventListener("click", () => {
+    /* =========================
+       MOBILE MENU
+    ========================== */
 
-    const isOpen = mobileDrawer.style.display === "flex";
+    if (menuButton && mobileDrawer && !menuButton.dataset.drawerBound) {
 
-    mobileDrawer.style.display = isOpen ? "none" : "flex";
+        menuButton.dataset.drawerBound = "true";
 
-  });
 
-}
+        menuButton.addEventListener("click", () => {
 
-$$("#mobileDrawer a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (mobileDrawer) mobileDrawer.style.display = "none";
-  });
-});
-    $("commandButton")?.addEventListener("click", () => {
-      $("commandPalette")?.classList.remove("hidden");
-      $("paletteInput")?.focus();
+            mobileDrawer.classList.toggle("hidden");
+
+        });
+
+    }
+
+
+    /* Close menu after selecting a page */
+
+    $$("#mobileDrawer a").forEach(link => {
+
+        link.addEventListener("click", () => {
+
+            mobileDrawer?.classList.add("hidden");
+
+        });
+
     });
-    $("paletteClose")?.addEventListener("click", () => $("commandPalette")?.classList.add("hidden"));
-    $(".palette-backdrop")?.addEventListener("click", () => $("commandPalette")?.classList.add("hidden"));
+
+
+    /* =========================
+       COMMAND PALETTE
+    ========================== */
+
+    $("commandButton")?.addEventListener("click", () => {
+
+        $("commandPalette")?.classList.remove("hidden");
+
+        $("paletteInput")?.focus();
+
+    });
+
+
+    $("paletteClose")?.addEventListener("click", () => {
+
+        $("commandPalette")?.classList.add("hidden");
+
+    });
+
+
+    $(".palette-backdrop")?.addEventListener("click", () => {
+
+        $("commandPalette")?.classList.add("hidden");
+
+    });
+
+
+    /* =========================
+       KEYBOARD SHORTCUTS
+    ========================== */
 
     window.addEventListener("keydown", event => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        $("commandButton")?.click();
-      }
-      if (event.key === "Escape") {
-        $("commandPalette")?.classList.add("hidden");
-        hideModal();
-      }
+
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            $("commandButton")?.click();
+
+        }
+
+
+        if (event.key === "Escape") {
+
+            $("commandPalette")?.classList.add("hidden");
+
+            hideModal();
+
+            mobileDrawer?.classList.add("hidden");
+
+        }
+
     });
+
+
+    /* =========================
+       COMMAND BUTTONS
+    ========================== */
 
     $$("[data-command]").forEach(button => {
-      button.addEventListener("click", () => {
-        $("commandPalette")?.classList.add("hidden");
-        const target = button.dataset.command;
-        const page = target === "#explorer" ? "organisms.html" : target === "#analysis" ? "analysis.html" : "ai-lab.html";
-        go(page);
-      });
-    });
-  }
 
+        button.addEventListener("click", () => {
+
+            $("commandPalette")?.classList.add("hidden");
+
+
+            const target = button.dataset.command;
+
+
+            const page =
+                target === "#explorer"
+                    ? "organisms.html"
+                    : target === "#analysis"
+                        ? "analysis.html"
+                        : "ai-lab.html";
+
+
+            go(page);
+
+        });
+
+    });
+
+}
   function initHome() {
     $("heroDemoButton")?.addEventListener("click", () => go("organisms.html", { q: "Saccharomyces cerevisiae" }));
 
