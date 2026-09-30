@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const API_BASE = window.GENOMEAI_API_BASE || `${location.protocol}//127.0.0.1:8000`;
+  const API_BASE = window.GENOMEAI_API_BASE || "https://genome-ai-1-o993.onrender.com";
   const $ = (id) => document.getElementById(id);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
   const state = {
