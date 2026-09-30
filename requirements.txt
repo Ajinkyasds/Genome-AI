@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+biopython
+python-dotenv
+google-genai
