@@ -108,7 +108,7 @@ document.head.appendChild(purifierScript);
 // GENOMEBOT AI CONNECTION
 // =====================================
 
-const API_URL = "http://127.0.0.1:8000/chat";
+const API_URL = "https://genome-ai-1-o993.onrender.com/chat";
 
 const form = document.getElementById("gb-form");
 const input = document.getElementById("gb-input");
