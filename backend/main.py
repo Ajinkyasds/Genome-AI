@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from typing import Literal
 
 from .ai_engine import generate_genome_insight, is_ai_configured
 from .chat_engine import generate_chat_reply
@@ -51,7 +52,7 @@ class ChatRequest(BaseModel):
         default_factory=list
     )
 
-
+    mode: Literal["questions", "explorer"] = "questions"
 # ==========================================
 # HOME
 # ==========================================
@@ -261,10 +262,11 @@ def chat(request: ChatRequest):
 
     try:
 
-        reply = generate_chat_reply(
-            message,
-            history
-        )
+       reply = generate_chat_reply(
+    message,
+    history,
+    request.mode
+)
 
         return {
             "success": True,
