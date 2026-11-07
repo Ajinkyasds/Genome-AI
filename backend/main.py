@@ -235,7 +235,6 @@ def ai_insight(
         module
     )
 
-
 # ==========================================
 # GENOMEBOT AI CHAT
 # ==========================================
@@ -246,7 +245,6 @@ def chat(request: ChatRequest):
     message = request.message.strip()
 
     if not message:
-
         raise HTTPException(
             status_code=400,
             detail="Please enter a message."
@@ -255,18 +253,16 @@ def chat(request: ChatRequest):
     history = [
         item
         for item in request.history[-12:]
-
         if item.get("role") in ("user", "assistant")
         and isinstance(item.get("content"), str)
     ]
 
     try:
-
-       reply = generate_chat_reply(
-    message,
-    history,
-    request.mode
-)
+        reply = generate_chat_reply(
+            message,
+            history,
+            request.mode
+        )
 
         return {
             "success": True,
@@ -274,7 +270,6 @@ def chat(request: ChatRequest):
         }
 
     except Exception as error:
-
         print(f"GenomeBot error: {error}")
 
         raise HTTPException(
