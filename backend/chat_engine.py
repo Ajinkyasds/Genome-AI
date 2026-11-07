@@ -1,6 +1,8 @@
 import os
 import time
+
 from google import genai
+from google.genai import types
 
 from .ai_engine import GEMINI_MODEL
 
@@ -10,387 +12,339 @@ from .ai_engine import GEMINI_MODEL
 # ==========================================
 
 WEBSITE_PAGES = {
-    "Dashboard": "The main overview of the GENOMICS website.",
-    "Organism": "Explore organisms and their genomic information.",
-    "Genome Library": "Explore available genome reference information.",
-    "Learn": "Learn scientific concepts related to genetics and genomics.",
-    "Human": "Explore human genetics educational content. This is not a place to upload personal DNA for medical analysis.",
-    "About": "Learn about the GENOMICS educational project."
+    "Dashboard": "Main overview of GENOMICS.",
+    "Organism": "Explore organisms and genomic information.",
+    "Genome Library": "Explore genome reference information.",
+    "Learn": "Learn genetics, genomics and biology.",
+    "Human": "Educational human genetics content.",
+    "About": "Information about the GENOMICS project."
 }
 
 
 # ==========================================
-# QUESTIONS MODE — SYSTEM PROMPT
+# QUESTIONS MODE — GENOME AI 2.0
 # ==========================================
 
 QUESTIONS_PROMPT = """
-You are GenomeBot, the scientific educational assistant
-for GenomeAI and GENOMICS.
+You are GenomeBot 2.0, an advanced AI educational
+assistant integrated into the GENOMICS website.
 
-Your job is to teach students about:
+IDENTITY:
 
-- DNA and RNA
-- Genes and chromosomes
-- Genetics and genomics
-- Genome sequencing
-- Mutations and evolution
-- Proteins and amino acids
-- Molecular biology
-- Bioinformatics
-- Biotechnology
-- CRISPR and gene editing
-- Scientific research
+You are an intelligent, curious, knowledgeable and
+conversational AI assistant.
 
-PERSONALITY:
-- Friendly, intelligent and conversational.
-- Explain like an excellent science teacher.
-- Use simple English and relatable examples.
-- Encourage scientific curiosity.
+You are not a predefined FAQ chatbot.
 
-ANSWERING RULES:
-1. Answer the actual question.
-2. Use Markdown headings where useful.
-3. Bold important scientific terms.
-4. Use bullet points and numbered steps.
-5. Use tables for comparisons when useful.
-6. Never invent scientific facts.
-7. Explain difficult concepts step by step.
-8. Acknowledge uncertainty.
-9. Never claim GenomeAI physically sequences DNA.
-10. Never provide medical diagnoses or personal genetic predictions.
+You must understand questions, reason about them,
+and generate relevant answers.
 
-End complex explanations with a Key Takeaway when useful.
+==================================================
+1. OPEN-ENDED INTELLIGENCE
+==================================================
+
+You can answer questions across a broad range
+of subjects, including:
+
+- Biology and genetics
+- Genomics and biotechnology
+- Physics and astronomy
+- Chemistry
+- Mathematics
+- Computer science
+- Artificial intelligence
+- Medicine and scientific research
+- History and geography
+- Technology and engineering
+- General knowledge
+- Everyday educational questions
+
+Do not restrict yourself to genomics.
+
+If a user asks something unrelated to genomics,
+answer their question normally.
+
+Never redirect an unrelated question towards DNA
+or genetics unnecessarily.
+
+==================================================
+2. UNDERSTAND THE ACTUAL QUESTION
+==================================================
+
+This is one of your most important responsibilities.
+
+Before answering:
+
+1. Identify what the user actually wants to know.
+2. Understand the context of the question.
+3. Distinguish definitions from applications,
+   significance, advantages, disadvantages,
+   comparisons and explanations.
+4. Answer the specific question asked.
+
+IMPORTANT EXAMPLE:
+
+Question:
+"What is the relevance of genome sequencing
+in today's world?"
+
+WRONG RESPONSE:
+A basic definition of genome sequencing.
+
+CORRECT RESPONSE:
+Discuss its relevance in modern society, including:
+
+- Personalised medicine.
+- Cancer research.
+- Genetic disease research.
+- Infectious disease surveillance.
+- Agricultural biotechnology.
+- Evolutionary research.
+- Conservation biology.
+
+Explain WHY these applications matter.
+
+==================================================
+3. CONVERSATION MEMORY
+==================================================
+
+Use the previous conversation to understand
+follow-up questions.
+
+For example:
+
+User:
+What is DNA?
+
+Assistant:
+DNA stores genetic information.
+
+User:
+What is its structure?
+
+You must understand that "its" refers to DNA.
+
+Do not unnecessarily repeat previous explanations.
+
+==================================================
+4. ANSWERING STYLE
+==================================================
+
+- Use clear and understandable English.
+- Explain difficult concepts step by step.
+- Use examples when they improve understanding.
+- Use Markdown headings when appropriate.
+- Use bullet points for organised explanations.
+- Use tables for useful comparisons.
+- Bold important terms.
+- Avoid unnecessary repetition.
+- Adjust answer length to the question.
+
+For simple questions, give concise answers.
+
+For complex questions, provide detailed explanations.
+
+==================================================
+5. SCIENTIFIC ACCURACY
+==================================================
+
+- Never invent scientific facts.
+- Distinguish established facts from hypotheses.
+- Acknowledge uncertainty.
+- Correct misconceptions politely.
+- Do not present speculation as established science.
+- Do not pretend to have performed experiments.
+- Do not claim that GenomeAI physically sequences DNA.
+
+==================================================
+6. MEDICAL RESPONSIBILITY
+==================================================
+
+You may explain medical and genetic concepts
+for educational purposes.
+
+However:
+
+- Do not diagnose users.
+- Do not predict personal genetic conditions.
+- Do not replace qualified medical professionals.
+- Do not encourage uploading personal DNA
+  for medical diagnosis.
+
+==================================================
+7. PERSONALITY
+==================================================
+
+Be:
+
+- Intelligent.
+- Friendly.
+- Curious.
+- Conversational.
+- Encouraging.
+- Scientifically enthusiastic.
+
+Encourage users to explore new ideas.
+
+Your purpose is to make scientific knowledge
+understandable and accessible.
+
+FINAL RULE:
+
+Answer the user's actual question.
+
+You are an educational AI assistant,
+not a keyword-matching search engine.
 """
 
 
 # ==========================================
-# EXPLORER MODE — SYSTEM PROMPT
+# EXPLORER MODE
 # ==========================================
 
 EXPLORER_PROMPT = """
-You are GenomeBot Explorer, the interactive website
-guide for the GENOMICS educational website.
+You are GenomeBot Explorer, the interactive
+website guide for GENOMICS.
 
-Your mission is to help visitors discover the website.
+Your responsibilities:
+
+- Explain website sections.
+- Guide visitors through the website.
+- Suggest educational exploration missions.
+- Help users understand website functionality.
 
 KNOWN WEBSITE PAGES:
 
-1. Dashboard:
-   Main overview of the website.
+1. Dashboard
+2. Organism
+3. Genome Library
+4. Learn
+5. Human
+6. About
 
-2. Organism:
-   Explore organisms and genomic information.
+IMPORTANT:
 
-3. Genome Library:
-   Explore available genome reference information.
+Never invent website features.
 
-4. Learn:
-   Understand scientific concepts.
+Never claim that you physically clicked a button.
 
-5. Human:
-   Explore human genetics for educational purposes.
-   Do not encourage uploading personal DNA.
+Give clear navigation instructions.
 
-6. About:
-   Learn about the project.
+If a user asks a general scientific question,
+answer it briefly and connect it to the website
+only when genuinely relevant.
 
-YOUR RESPONSIBILITIES:
-
-- Give guided website tours.
-- Explain the purpose of website pages.
-- Suggest where visitors should go next.
-- Create educational exploration missions.
-- Help visitors who are confused or lost.
-- Connect scientific concepts with website sections.
-
-MISSION SYSTEM:
-
-You may create missions such as:
-
-MISSION 1 — Discover Life's Code
-Explore the Learn page and understand DNA.
-
-MISSION 2 — Meet an Organism
-Visit the Organism page and explore an organism.
-
-MISSION 3 — Explore Genetic Information
-Visit the Genome Library and discover its purpose.
-
-MISSION 4 — Human Genetics
-Explore the Human educational section.
-
-MISSION 5 — Become a Genomics Explorer
-Explore the Dashboard, Learn and About sections.
-
-IMPORTANT RULES:
-
-- Give clear, numbered navigation instructions.
-- Make exploration feel like a scientific adventure.
-- Never pretend you can physically click or navigate the website.
-- Never invent buttons, links, games or website features.
-- If you are unsure about a page's exact layout, say so.
-- Ask the visitor to share a screenshot if exact navigation help
-  is required.
-
-Use friendly language, headings and occasional scientific emojis.
+Make exploration educational and engaging.
 """
 
 
 # ==========================================
-# BUILT-IN EDUCATIONAL KNOWLEDGE BASE
+# FALLBACK KNOWLEDGE
 # ==========================================
 
 KNOWLEDGE_BASE = {
 
     "dna": """
-## 🧬 What is DNA?
+## What is DNA?
 
-**DNA (Deoxyribonucleic Acid)** stores the genetic
-information of most living organisms.
+DNA (Deoxyribonucleic Acid) stores genetic
+information in most living organisms.
 
-### Important facts
+It contains four nitrogenous bases:
 
-- DNA has a double-helix structure.
-- It is made of smaller units called nucleotides.
-- It contains four nitrogenous bases:
-  - Adenine (A)
-  - Thymine (T)
-  - Guanine (G)
-  - Cytosine (C)
-- A pairs with T.
-- G pairs with C.
+- Adenine (A)
+- Thymine (T)
+- Guanine (G)
+- Cytosine (C)
 
-### Scientific Insight
-DNA acts like an instruction manual for living organisms.
+DNA usually has a double-helix structure.
 
 **Key Takeaway:** DNA stores hereditary information.
 """,
 
     "rna": """
-## 🧪 What is RNA?
+## What is RNA?
 
-**RNA (Ribonucleic Acid)** helps cells use genetic information.
+RNA (Ribonucleic Acid) helps cells use
+genetic information.
 
-### Important facts
+Important types include:
 
-- RNA usually consists of a single strand.
-- It contains ribose sugar.
-- It uses Uracil (U) instead of Thymine (T).
-- It plays an important role in protein synthesis.
+- mRNA
+- tRNA
+- rRNA
 
-### Three important types
-
-1. **mRNA:** Carries genetic instructions.
-2. **tRNA:** Brings amino acids during protein synthesis.
-3. **rRNA:** Forms an important part of ribosomes.
+RNA plays an important role in protein synthesis.
 
 **Key Takeaway:** RNA helps cells use genetic instructions.
 """,
 
-    "gene": """
-## 🧬 What is a Gene?
-
-A **gene** is a section of DNA containing information
-used to produce a functional product, such as a protein
-or functional RNA.
-
-### Important facts
-
-- Genes are located on chromosomes.
-- Genes contribute to inherited characteristics.
-- Different versions of a gene are called alleles.
-
-**Key Takeaway:** Genes are important units of heredity.
-""",
-
-    "chromosome": """
-## 🧫 What is a Chromosome?
-
-A **chromosome** is a structure made of DNA and proteins.
-
-### Important facts
-
-- Chromosomes contain many genes.
-- They organise and package DNA.
-- Most human body cells have 46 chromosomes,
-  arranged in 23 pairs.
-
-**Key Takeaway:** Chromosomes organise genetic information.
-""",
-
     "genome": """
-## 🌍 What is a Genome?
+## What is a Genome?
 
-A **genome** is the complete set of genetic material
+A genome is the complete set of genetic material
 of an organism.
 
-### Important facts
+It includes genes and non-coding DNA.
 
-- It includes genes and non-coding DNA.
-- Different organisms have different genomes.
-- Genome research helps scientists study evolution
-  and biological diversity.
+Genome research helps scientists investigate
+evolution, heredity and biological diversity.
 
 **Key Takeaway:** A genome represents an organism's
 complete genetic information.
 """,
 
     "sequencing": """
-## 🔬 What is Genome Sequencing?
+## What is Genome Sequencing?
 
 Genome sequencing determines the order of DNA bases.
 
-### Basic process
+Scientists use sequencing technologies to read
+genetic information.
 
-1. DNA is obtained from a biological sample.
-2. The DNA is prepared for sequencing.
-3. Sequencing technology reads DNA fragments.
-4. Computer software analyses the results.
-5. Scientists interpret the information.
+The resulting data can be analysed using
+bioinformatics tools.
 
-**Key Takeaway:** Sequencing helps scientists read
-the order of genetic letters.
-""",
-
-    "mutation": """
-## 🧬 What is a Mutation?
-
-A **mutation** is a change in the DNA sequence.
-
-### Important facts
-
-- Mutations can occur naturally.
-- Some mutations have no noticeable effect.
-- Some affect how a gene functions.
-- Mutations contribute to genetic variation.
-
-**Key Takeaway:** Mutations are changes in genetic information.
-""",
-
-    "bioinformatics": """
-## 💻 What is Bioinformatics?
-
-**Bioinformatics** combines biology, computer science
-and mathematics to study biological data.
-
-### Applications
-
-- Analysing DNA sequences.
-- Comparing genomes.
-- Identifying genes.
-- Studying evolutionary relationships.
-- Organising biological databases.
-
-**Key Takeaway:** Bioinformatics uses computers
-to understand biological information.
-""",
-
-    "evolution": """
-## 🌱 What is Evolution?
-
-**Evolution** refers to changes in inherited characteristics
-of populations over generations.
-
-### Important ideas
-
-- Genetic variation exists within populations.
-- Mutations can introduce genetic variations.
-- Natural selection influences inherited characteristics.
-- Evolution occurs across generations.
-
-**Key Takeaway:** Evolution explains how populations
-change over time.
-""",
-
-    "biotechnology": """
-## 🧪 What is Biotechnology?
-
-**Biotechnology** uses living organisms, cells or biological
-systems to develop useful products and processes.
-
-### Applications
-
-- Medicine production.
-- Agricultural improvements.
-- Industrial enzymes.
-- Scientific research.
-- Genetic engineering.
-
-**Key Takeaway:** Biotechnology applies biological knowledge
-to solve practical problems.
-""",
-
-    "protein": """
-## 🧬 What are Proteins?
-
-**Proteins** are biological molecules made from chains
-of amino acids.
-
-### Important functions
-
-- Support cell structure.
-- Act as enzymes.
-- Help transport substances.
-- Participate in cell signalling.
-- Support growth and repair.
-
-### How are proteins made?
-
-Genetic information in DNA is used to make RNA.
-Ribosomes then use the RNA instructions to assemble
-amino acids into proteins.
-
-**Key Takeaway:** Proteins perform many essential
-functions in living organisms.
-""",
-
-    "molecular biology": """
-## 🔬 What is Molecular Biology?
-
-**Molecular biology** studies biological processes
-at the molecular level.
-
-It focuses especially on:
-
-- DNA
-- RNA
-- Proteins
-- Gene expression
-- Molecular interactions
-
-It helps scientists understand how cells function.
-
-**Key Takeaway:** Molecular biology explores life
-through its molecules.
-""",
-
-    "crispr": """
-## ✂️ What is CRISPR?
-
-**CRISPR-Cas9** is a gene-editing technology
-adapted from a natural defence system found in bacteria.
-
-### Basic idea
-
-- A guide RNA helps direct the system to a selected
-  DNA sequence.
-- The Cas9 protein can cut DNA at the targeted location.
-- Researchers study how cells repair the DNA.
-
-### Applications being researched
-
-- Understanding gene function.
-- Studying inherited conditions.
-- Developing potential medical applications.
-- Agricultural research.
-
-**Important:** Gene editing requires careful scientific,
-ethical and safety evaluation.
-
-**Key Takeaway:** CRISPR is a tool researchers use
-to study and modify genetic material.
+**Key Takeaway:** Sequencing allows scientists
+to study the order of genetic letters.
 """
 }
+
+
+# ==========================================
+# FALLBACK RESPONSE
+# ==========================================
+
+def get_questions_fallback(message):
+
+    question = message.lower().strip().rstrip("?!.")
+
+    # Only answer when the user directly asks
+    # for a basic definition.
+
+    definitions = {
+        "dna": ["what is dna", "define dna"],
+        "rna": ["what is rna", "define rna"],
+        "genome": ["what is a genome", "define genome"],
+        "sequencing": [
+            "what is genome sequencing",
+            "define genome sequencing"
+        ]
+    }
+
+    for topic, phrases in definitions.items():
+
+        if question in phrases:
+            return KNOWLEDGE_BASE[topic]
+
+    # Never give an unrelated predefined answer.
+
+    return (
+        "GenomeBot's advanced AI service is "
+        "temporarily unavailable. Please try again "
+        "shortly. I don't want to give you an "
+        "irrelevant or misleading answer."
+    )
 
 
 # ==========================================
@@ -404,167 +358,50 @@ def get_explorer_fallback(message):
     if any(word in question for word in [
         "mission", "adventure", "challenge", "quest"
     ]):
-        return """
-## 🧭 Welcome, Genomics Explorer!
 
-Your first scientific mission begins now.
+        return """
+## Welcome, Genomics Explorer!
 
 ### MISSION 1 — Discover Life's Code
 
-**Objective:** Understand the language of life.
+1. Open the Learn page.
+2. Explore DNA and genetics.
+3. Understand the four DNA bases.
 
-1. Open the **Learn** page.
-2. Explore the available biology topics.
-3. Find the section explaining DNA.
-4. Learn what the four DNA bases represent.
-
-### Your discovery goal
-
-Understand why DNA is called the instruction
-manual of living organisms.
-
-**Mission status:** Ready to begin! 🔬
+Your scientific journey begins here!
 """
 
     if any(word in question for word in [
-        "tour", "guide", "navigate", "website",
-        "lost", "where", "pages", "explore"
+        "tour", "guide", "navigate",
+        "website", "lost", "pages", "explore"
     ]):
+
         return """
-## 🧭 Welcome to the GENOMICS Website!
+## Welcome to GENOMICS!
 
-Let's explore the main sections.
+Explore these website sections:
 
-### 1. Dashboard
-Start here for the main website overview.
+1. Dashboard — Main overview.
+2. Organism — Explore organisms.
+3. Genome Library — Reference information.
+4. Learn — Understand scientific concepts.
+5. Human — Educational human genetics.
+6. About — Learn about the project.
 
-### 2. Organism
-Discover organisms and their genomic information.
-
-### 3. Genome Library
-Explore the available genome reference information.
-
-### 4. Learn
-Understand DNA, genetics and other scientific concepts.
-
-### 5. Human
-Explore human genetics educational content.
-
-### 6. About
-Learn about the project.
-
-### Recommended first journey
-
-Start with **Learn**, continue to **Organism**,
-and then explore the **Genome Library**.
-
-I can guide you one step at a time!
-
-💡 I cannot click the website for you, but I can
-help you find your way around it.
+Start with the Learn section!
 """
 
     return """
-## 🧭 GenomeBot Explorer
-
-I'm your guide through the GENOMICS website!
+## GenomeBot Explorer
 
 I can help you:
 
-- Discover the website pages.
-- Take a guided scientific tour.
-- Start an educational mission.
-- Understand what each section does.
-- Find your next scientific discovery.
+- Explore the website.
+- Start scientific missions.
+- Understand website sections.
+- Discover educational content.
 
-Try asking:
-
-- Guide me through this website.
-- Start a scientific mission.
-- What can I discover here?
-"""
-
-
-# ==========================================
-# QUESTIONS FALLBACK
-# ==========================================
-
-def get_questions_fallback(message):
-
-    question = message.lower()
-
-    # Check specific topics before general topics.
-    # This prevents unrelated keyword matches.
-
-    topic_groups = [
-        ("molecular biology", [
-            "molecular biology"
-        ]),
-        ("bioinformatics", [
-            "bioinformatics"
-        ]),
-        ("sequencing", [
-            "sequencing", "sequencer", "sequence"
-        ]),
-        ("chromosome", [
-            "chromosome"
-        ]),
-        ("biotechnology", [
-            "biotechnology", "biotech"
-        ]),
-        ("crispr", [
-            "crispr", "cas9", "gene editing",
-            "base editing", "prime editing"
-        ]),
-        ("protein", [
-            "protein", "proteins", "amino acid",
-            "amino acids"
-        ]),
-        ("mutation", [
-            "mutation", "mutations"
-        ]),
-        ("evolution", [
-            "evolution", "natural selection"
-        ]),
-        ("genome", [
-            "genome", "genomics"
-        ]),
-        ("gene", [
-            "gene", "genes", "heredity", "allele"
-        ]),
-        ("rna", [
-            "rna", "ribonucleic"
-        ]),
-        ("dna", [
-            "dna", "deoxyribonucleic"
-        ])
-    ]
-
-    for topic, keywords in topic_groups:
-
-        if any(word in question for word in keywords):
-            return KNOWLEDGE_BASE[topic]
-
-    return """
-## 🔬 GenomeBot — Questions Mode
-
-My advanced AI service is temporarily unavailable.
-
-However, I can still explain:
-
-- DNA and RNA
-- Genes and chromosomes
-- Genomes and sequencing
-- Mutations and evolution
-- Bioinformatics
-- Biotechnology
-- Proteins and amino acids
-- Molecular biology
-- CRISPR
-
-Ask me a question about one of these topics.
-
-💡 Scientific curiosity never stops!
+Try asking me to guide you through the website.
 """
 
 
@@ -581,7 +418,7 @@ def get_fallback_reply(message, mode="questions"):
 
 
 # ==========================================
-# MAIN CHAT ENGINE
+# MAIN CHAT ENGINE — GENOMEBOT 2.0
 # ==========================================
 
 def generate_chat_reply(message, history=None, mode="questions"):
@@ -589,55 +426,96 @@ def generate_chat_reply(message, history=None, mode="questions"):
     if mode not in ("questions", "explorer"):
         mode = "questions"
 
+    if not isinstance(message, str) or not message.strip():
+        return "Please enter a question."
+
     api_key = os.getenv("GEMINI_API_KEY")
 
-    # Use fallback if API key is unavailable.
     if not api_key:
         return get_fallback_reply(message, mode)
 
-    client = genai.Client(api_key=api_key)
-
     history = history or []
 
-    conversation = ""
+    if not isinstance(history, list):
+        history = []
 
-    for item in history[-12:]:
+    client = genai.Client(api_key=api_key)
 
-        role = item.get("role", "")
-        content = item.get("content", "")
-
-        if role in ("user", "assistant") and isinstance(content, str):
-            conversation += f"\n{role.upper()}: {content[:3000]}\n"
+    # Select personality and instructions.
 
     if mode == "explorer":
         system_prompt = EXPLORER_PROMPT
     else:
         system_prompt = QUESTIONS_PROMPT
 
-    prompt = f"""
-{system_prompt}
+    # Build structured conversation history.
 
-PREVIOUS CONVERSATION:
-{conversation}
+    conversation = []
 
-CURRENT USER MESSAGE:
-{message}
+    for item in history[-12:]:
 
-Reply as GenomeBot using attractive Markdown formatting.
-"""
+        if not isinstance(item, dict):
+            continue
+
+        role = item.get("role")
+        content = item.get("content")
+
+        if role not in ("user", "assistant"):
+            continue
+
+        if not isinstance(content, str) or not content.strip():
+            continue
+
+        conversation.append(
+            types.Content(
+                role="user" if role == "user" else "model",
+                parts=[
+                    types.Part.from_text(
+                        text=content[:3000]
+                    )
+                ]
+            )
+        )
+
+    # Add the current question.
+
+    conversation.append(
+        types.Content(
+            role="user",
+            parts=[
+                types.Part.from_text(
+                    text=message.strip()
+                )
+            ]
+        )
+    )
+
+    # Generate the response.
 
     for attempt in range(3):
 
         try:
 
             response = client.models.generate_content(
+
                 model=GEMINI_MODEL,
-                contents=prompt
+
+                contents=conversation,
+
+                config=types.GenerateContentConfig(
+
+                    system_instruction=system_prompt,
+
+                    temperature=0.7,
+
+                    max_output_tokens=2500
+                )
             )
 
             answer = getattr(response, "text", None)
 
-            if not answer:
+            if not answer or not answer.strip():
+
                 raise RuntimeError(
                     "Gemini returned an empty response."
                 )
@@ -657,8 +535,7 @@ Reply as GenomeBot using attractive Markdown formatting.
             if quota_error:
 
                 print(
-                    "Gemini quota exhausted. "
-                    "Using educational fallback."
+                    "GenomeBot: Gemini quota exhausted."
                 )
 
                 return get_fallback_reply(message, mode)
@@ -673,14 +550,16 @@ Reply as GenomeBot using attractive Markdown formatting.
                 wait_time = 2 * (attempt + 1)
 
                 print(
-                    f"Gemini temporarily unavailable. "
-                    f"Retrying in {wait_time} seconds..."
+                    f"GenomeBot temporarily unavailable. "
+                    f"Retrying in {wait_time} seconds."
                 )
 
                 time.sleep(wait_time)
 
-            else:
+                continue
 
-                raise RuntimeError(
-                    f"GenomeBot AI error: {error}"
-                )
+            print(
+                f"GenomeBot AI error: {error}"
+            )
+
+            return get_fallback_reply(message, mode)
