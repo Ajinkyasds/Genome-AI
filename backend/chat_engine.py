@@ -227,7 +227,30 @@ to solve practical problems.
 def get_fallback_reply(message):
 
     question = message.lower()
+# Detect advanced topics not covered by the knowledge base
+advanced_topics = [
+    "crispr",
+    "cas9",
+    "gene editing",
+    "genetic engineering",
+    "embryo editing",
+    "base editing",
+    "prime editing"
+]
 
+if any(topic in question for topic in advanced_topics):
+    return """
+## GenomeBot — Educational Mode
+
+This is an advanced scientific topic outside my
+current built-in knowledge base.
+
+My advanced AI service is temporarily unavailable.
+Please try again when it becomes available.
+
+I don't want to give you incomplete or inaccurate
+scientific information.
+"""
     # Match common scientific topics
     if any(word in question for word in ["sequencing", "sequence", "sequencer"]):
         return KNOWLEDGE_BASE["sequencing"]
