@@ -1,0 +1,520 @@
+/* =========================================
+   GENOMEBOT — PREMIUM CHAT INTERFACE
+========================================= */
+
+#genomebot-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999999;
+    font-family: Inter, Arial, sans-serif;
+}
+
+/* =========================================
+   FLOATING DNA LAUNCHER
+========================================= */
+
+#genomebot-launcher {
+    width: 64px;
+    height: 64px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #087f8c, #174ea6);
+    color: white;
+    font-size: 29px;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(8, 127, 140, 0.35);
+    transition: all 0.3s ease;
+}
+
+#genomebot-launcher:hover {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 12px 35px rgba(8, 127, 140, 0.45);
+}
+
+.gb-hidden {
+    display: none !important;
+}
+
+/* =========================================
+   CHAT WINDOW
+========================================= */
+
+#genomebot-window {
+    display: none;
+    width: 390px;
+    height: 570px;
+    max-height: min(570px, calc(100dvh - 40px));
+    background: #ffffff;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 20px 65px rgba(15, 40, 65, 0.22);
+    border: 1px solid #e1ebf2;
+    flex-direction: column;
+}
+
+#genomebot-window.gb-visible {
+    display: flex;
+    animation: gbAppear 0.25s ease;
+}
+
+@keyframes gbAppear {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
+.gb-header {
+    background: linear-gradient(120deg, #082f49, #087f8c);
+    color: white;
+    padding: 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gb-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gb-avatar {
+    width: 43px;
+    height: 43px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 23px;
+}
+
+.gb-profile h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.gb-profile span {
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.gb-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.gb-controls button {
+    background: rgba(255,255,255,0.14);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 19px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.gb-controls button:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* =========================================
+   MESSAGE AREA
+========================================= */
+
+.gb-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 19px 15px;
+    background: #f5f9fc;
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+
+.gb-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.gb-messages::-webkit-scrollbar-thumb {
+    background: #c6dce5;
+    border-radius: 10px;
+}
+
+/* =========================================
+   MESSAGE BUBBLES
+========================================= */
+
+.gb-message {
+    max-width: 91%;
+    padding: 13px 15px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+    animation: gbMessageIn 0.2s ease;
+}
+
+@keyframes gbMessageIn {
+    from {
+        opacity: 0;
+        transform: translateY(7px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.gb-bot {
+    background: #ffffff;
+    color: #26394d;
+    border: 1px solid #e2edf3;
+    border-top-left-radius: 4px;
+    box-shadow: 0 3px 12px rgba(20, 50, 80, 0.04);
+}
+
+.gb-user {
+    background: linear-gradient(135deg, #087f8c, #1267a5);
+    color: white;
+    margin-left: auto;
+    border-top-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(8, 127, 140, 0.14);
+}
+
+/* =========================================
+   MARKDOWN FORMATTING
+========================================= */
+
+/* Paragraphs */
+
+.gb-message p {
+    margin: 0 0 10px;
+}
+
+.gb-message p:last-child {
+    margin-bottom: 0;
+}
+
+/* Headings */
+
+.gb-message h1,
+.gb-message h2,
+.gb-message h3 {
+    color: #087f8c;
+    line-height: 1.4;
+    margin: 16px 0 9px;
+    font-weight: 750;
+}
+
+.gb-message h1 {
+    font-size: 19px;
+}
+
+.gb-message h2 {
+    font-size: 16px;
+    border-bottom: 1px solid #e2edf3;
+    padding-bottom: 6px;
+}
+
+.gb-message h3 {
+    font-size: 14px;
+}
+
+.gb-message h1:first-child,
+.gb-message h2:first-child,
+.gb-message h3:first-child {
+    margin-top: 0;
+}
+
+/* Bold text */
+
+.gb-message strong {
+    color: #075d70;
+    font-weight: 750;
+}
+
+/* User messages retain white text */
+
+.gb-user strong {
+    color: #ffffff;
+}
+
+/* Lists */
+
+.gb-message ul,
+.gb-message ol {
+    padding-left: 21px;
+    margin: 9px 0 13px;
+}
+
+.gb-message li {
+    margin-bottom: 5px;
+    padding-left: 2px;
+}
+
+.gb-message li::marker {
+    color: #087f8c;
+    font-weight: bold;
+}
+
+/* Links */
+
+.gb-message a {
+    color: #087f8c;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.gb-message a:hover {
+    text-decoration: underline;
+}
+
+/* Inline code */
+
+.gb-message code {
+    background: #eaf5f7;
+    color: #087f8c;
+    padding: 3px 6px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-family: Consolas, monospace;
+}
+
+/* Code blocks */
+
+.gb-message pre {
+    background: #102a43;
+    color: #e6f5ff;
+    padding: 13px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.gb-message pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+/* Blockquotes */
+
+.gb-message blockquote {
+    margin: 12px 0;
+    padding: 10px 13px;
+    background: #eaf7f8;
+    border-left: 3px solid #087f8c;
+    border-radius: 5px;
+    color: #315568;
+}
+
+/* Horizontal divider */
+
+.gb-message hr {
+    border: none;
+    border-top: 1px solid #dce9ee;
+    margin: 14px 0;
+}
+
+/* Tables */
+
+.gb-message table {
+    display: block;
+    width: 100%;
+    border-collapse: collapse;
+    overflow-x: auto;
+    font-size: 12px;
+    margin: 12px 0;
+}
+
+.gb-message th {
+    background: #e4f3f5;
+    color: #075d70;
+    font-weight: 700;
+}
+
+.gb-message th,
+.gb-message td {
+    border: 1px solid #dce8ed;
+    padding: 8px;
+    text-align: left;
+}
+
+.gb-message tr:nth-child(even) {
+    background: #f5fafb;
+}
+
+/* =========================================
+   SUGGESTED QUESTIONS
+========================================= */
+
+.gb-suggestions {
+    display: flex;
+    gap: 8px;
+    padding: 11px 13px;
+    overflow-x: auto;
+    background: white;
+    border-top: 1px solid #edf1f4;
+}
+
+.gb-suggestions::-webkit-scrollbar {
+    height: 3px;
+}
+
+.gb-suggestions button {
+    white-space: nowrap;
+    border: 1px solid #b8dce0;
+    background: #f0fbfb;
+    color: #087f8c;
+    border-radius: 20px;
+    padding: 8px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gb-suggestions button:hover {
+    background: #087f8c;
+    color: white;
+    border-color: #087f8c;
+}
+
+/* =========================================
+   PREMIUM GENOMEBOT MESSAGE COMPOSER
+========================================= */
+
+#gb-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 14px;
+    background: #ffffff;
+    border-top: 1px solid #e8eff3;
+}
+
+#gb-input {
+    flex: 1;
+    min-width: 0;
+    height: 46px;
+    border: 1.5px solid #e1eaf0;
+    border-radius: 15px;
+    padding: 0 16px;
+    outline: none;
+    background: #f8fbfd;
+    color: #26394d;
+    font-family: inherit;
+    font-size: 13px;
+    transition: all 0.25s ease;
+}
+
+#gb-input::placeholder {
+    color: #94a5b3;
+}
+
+#gb-input:focus {
+    background: #ffffff;
+    border-color: #087f8c;
+    box-shadow: 0 0 0 4px rgba(8, 127, 140, 0.09);
+}
+
+#gb-form button {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #087f8c, #1267a5);
+    color: white;
+    cursor: pointer;
+    font-size: 19px;
+    box-shadow: 0 5px 14px rgba(8, 127, 140, 0.2);
+    transition: all 0.25s ease;
+}
+
+#gb-form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(8, 127, 140, 0.3);
+}
+
+#gb-form button:active {
+    transform: scale(0.94);
+}
+
+#gb-form button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+/* =========================================
+   GENOMEBOT THINKING ANIMATION
+========================================= */
+
+.gb-thinking {
+    padding: 13px 15px;
+    min-width: 175px;
+}
+
+.gb-thinking-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gb-thinking-label {
+    color: #698091;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gb-thinking-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.gb-thinking-dots span {
+    width: 6px;
+    height: 6px;
+    background: #087f8c;
+    border-radius: 50%;
+    animation: gbDotPulse 1.2s infinite ease-in-out;
+}
+
+.gb-thinking-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.gb-thinking-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes gbDotPulse {
+    0%, 60%, 100% {
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-5px);
+    }
+}
