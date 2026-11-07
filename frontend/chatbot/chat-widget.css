@@ -498,6 +498,49 @@
     border-radius: 50%;
     animation: gbDotPulse 1.2s infinite ease-in-out;
 }
+/* =========================================
+   GENOMEBOT — DUAL MODE SWITCHER
+========================================= */
+
+.gb-modebar {
+    display: flex;
+    gap: 9px;
+    padding: 11px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #e8eff3;
+}
+
+.gb-mode-button {
+    flex: 1;
+    padding: 10px 8px;
+    border: 1px solid #dce9ee;
+    border-radius: 12px;
+    background: #f5f9fc;
+    color: #526b7e;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.gb-mode-button:hover {
+    border-color: #087f8c;
+    color: #087f8c;
+    background: #eaf7f8;
+}
+
+.gb-mode-button.gb-mode-active {
+    background: linear-gradient(120deg, #087f8c, #1267a5);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(8, 127, 140, 0.18);
+}
+
+.gb-mode-button:focus-visible {
+    outline: 3px solid rgba(8, 127, 140, 0.25);
+    outline-offset: 2px;
+}
 
 .gb-thinking-dots span:nth-child(2) {
     animation-delay: 0.2s;
