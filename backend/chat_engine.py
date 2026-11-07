@@ -14,8 +14,7 @@ WEBSITE_PAGES = {
     "Organism": "Explore organisms and their genomic information.",
     "Genome Library": "Explore available genome reference information.",
     "Learn": "Learn scientific concepts related to genetics and genomics.",
-    "Human": "Explore human genetics educational content. This is not
-    a place to upload personal DNA for medical analysis.",
+    "Human": "Explore human genetics educational content. This is not a place to upload personal DNA for medical analysis.",
     "About": "Learn about the GENOMICS educational project."
 }
 
