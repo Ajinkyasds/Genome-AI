@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 
+import httpx
+
 try:
     from dotenv import load_dotenv
 except Exception:
@@ -13,16 +15,16 @@ if load_dotenv:
     load_dotenv(ENV_FILE)
 
 
-GEMINI_MODEL = os.getenv(
-    "GEMINI_MODEL",
-    "gemini-3.8-flash"
+GROQ_MODEL = os.getenv(
+    "GROQ_MODEL",
+    "openai/gpt-oss-20b"
 )
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
 def is_ai_configured():
-    return bool(
-        os.getenv("GEMINI_API_KEY")
-    )
+    return bool(os.getenv("GROQ_API_KEY"))
 
 
 def _safe_number(value, default=0):
@@ -34,51 +36,24 @@ def _safe_number(value, default=0):
 
 def _fallback(genome, analysis, module):
 
-    name = genome.get(
-        "scientific_name",
-        "the selected organism"
-    )
+    name = genome.get("scientific_name", "the selected organism")
+    common = genome.get("common_name", "")
+    group = genome.get("group", "")
 
-    common = genome.get(
-        "common_name",
-        ""
-    )
+    length = int(_safe_number(analysis.get("genome_length", 0)))
+    gc = _safe_number(analysis.get("gc_percentage", 0))
 
-    group = genome.get(
-        "group",
-        ""
-    )
-
-    length = int(
-        _safe_number(
-            analysis.get("genome_length", 0)
-        )
-    )
-
-    gc = _safe_number(
-        analysis.get("gc_percentage", 0)
-    )
-
-    bases = (
-        analysis.get("base_counts", {})
-        or {}
-    )
+    bases = analysis.get("base_counts", {}) or {}
 
     sequences = int(
-        _safe_number(
-            analysis.get("sequence_count", 0)
-        )
+        _safe_number(analysis.get("sequence_count", 0))
     )
 
     total = max(length, 1)
 
     percentages = {
         base: round(
-            (
-                _safe_number(
-                    bases.get(base, 0)
-                ) / total
-            ) * 100,
+            (_safe_number(bases.get(base, 0)) / total) * 100,
             2
         )
         for base in "ATGC"
@@ -89,18 +64,8 @@ def _fallback(genome, analysis, module):
         2
     )
 
-    common_text = (
-        f" ({common})"
-        if common
-        else ""
-    )
-
-    group_text = (
-        f" It belongs to the {group} group."
-        if group
-        else ""
-    )
-
+    common_text = f" ({common})" if common else ""
+    group_text = f" It belongs to the {group} group." if group else ""
 
     if module == "Base Composition":
 
@@ -109,7 +74,7 @@ def _fallback(genome, analysis, module):
             f"The reference genome of **{name}**{common_text} "
             f"contains **{length:,} DNA bases** across "
             f"**{sequences} sequence records**.\n\n"
-            
+
             f"Looking at the four DNA bases, the genome contains "
             f"**A = {bases.get('A', 0):,}**, "
             f"**T = {bases.get('T', 0):,}**, "
@@ -118,16 +83,12 @@ def _fallback(genome, analysis, module):
 
             f"The calculated GC content is **{gc:.2f}%**, "
             f"while A and T together make up about "
-            f"**{at_percentage:.2f}%** of the sequence. "
-            f"This means the reference is relatively more "
-            f"AT-rich than GC-rich.\n\n"
+            f"**{at_percentage:.2f}%** of the sequence.\n\n"
 
             f"GC content is useful when comparing genomes or "
-            f"different regions of a genome, although GC content "
-            f"by itself does not tell us what a particular gene "
-            f"does or whether a sequence has a biological effect."
+            f"different regions of a genome. However, GC content "
+            f"alone cannot explain the function of individual genes."
         )
-
 
     elif module == "Biological Context":
 
@@ -138,22 +99,17 @@ def _fallback(genome, analysis, module):
 
             f"GenomeAI measured **{length:,} bases** across "
             f"**{sequences} sequence records**, with a calculated "
-            f"GC content of **{gc:.2f}%**. "
-            f"The remaining portion is mainly represented by "
-            f"adenine and thymine, which together account for "
-            f"about **{at_percentage:.2f}%** of the analysed bases.\n\n"
+            f"GC content of **{gc:.2f}%**.\n\n"
 
             f"These measurements describe the composition of the "
             f"reference genome. They are useful for understanding "
-            f"and comparing genomic sequences, but they do not by "
-            f"themselves explain the function of individual genes "
-            f"or predict biological outcomes.\n\n"
+            f"and comparing genomic sequences, but they do not "
+            f"explain individual gene functions or predict "
+            f"biological outcomes.\n\n"
 
-            f"Importantly, these are computational measurements "
-            f"from a reference dataset, not a clinical diagnosis "
-            f"or a claim about an individual organism."
+            f"These are computational measurements from a reference "
+            f"dataset, not a clinical diagnosis."
         )
-
 
     elif module == "Research Questions":
 
@@ -163,61 +119,34 @@ def _fallback(genome, analysis, module):
             f"of **{name}**, several useful research questions "
             f"can be explored:\n\n"
 
-            f"- **How does its GC content compare with another "
-            f"organism?** This can reveal differences in overall "
-            f"sequence composition.\n\n"
-
-            f"- **Do different chromosomes or sequence records "
-            f"have different base compositions?** This could show "
-            f"whether GC content is distributed evenly across the "
-            f"reference.\n\n"
-
-            f"- **What happens when a sample sequence is compared "
-            f"with the reference?** Computational comparison can "
-            f"identify sequence differences.\n\n"
-
-            f"- **Where are potential coding regions located?** "
-            f"Further bioinformatics analysis could search for "
-            f"open reading frames and other sequence features.\n\n"
-
-            f"- **How does this genome compare with related "
-            f"organisms?** Genome size, GC content and sequence "
-            f"features can be compared computationally."
+            f"- How does its GC content compare with another organism?\n\n"
+            f"- Do different chromosomes or sequence records have "
+            f"different base compositions?\n\n"
+            f"- What happens when a sample sequence is compared "
+            f"with the reference?\n\n"
+            f"- Where are potential coding regions located?\n\n"
+            f"- How does this genome compare with related organisms?"
         )
-
 
     else:
 
         text = (
             f"### Genome interpretation\n\n"
             f"GenomeAI analysed the reference genome of "
-            f"**{name}**{common_text}. "
-            f"The dataset contains **{length:,} bases** across "
-            f"**{sequences} sequence records**.\n\n"
+            f"**{name}**{common_text}. The dataset contains "
+            f"**{length:,} bases** across **{sequences} sequence records**.\n\n"
 
             f"The calculated GC content is **{gc:.2f}%**, meaning "
             f"adenine and thymine together account for about "
-            f"**{at_percentage:.2f}%** of the analysed sequence. "
-            f"This gives the genome a relatively AT-rich overall "
-            f"composition.\n\n"
+            f"**{at_percentage:.2f}%** of the analysed sequence.\n\n"
 
-            f"### What does that tell us?\n\n"
             f"GC content is one of the basic measurements used "
-            f"in genomics to describe and compare DNA sequences. "
-            f"It can help researchers notice differences between "
-            f"genomes or genomic regions.\n\n"
+            f"in genomics to describe and compare DNA sequences.\n\n"
 
             f"However, GC content alone cannot tell us what a gene "
             f"does, identify a disease, or predict a biological "
-            f"outcome. More detailed sequence analysis would be "
-            f"needed for those questions.\n\n"
-
-            f"These values were calculated directly from the "
-            f"reference sequence by the GenomeAI bioinformatics "
-            f"engine. The AI layer is used to explain those "
-            f"computed results in simpler biological language."
+            f"outcome. More detailed sequence analysis is needed."
         )
-
 
     return {
         "success": True,
@@ -226,45 +155,25 @@ def _fallback(genome, analysis, module):
         "insight": text,
         "message": (
             "Generated from exact local BioPython analysis "
-            "because live Gemini is unavailable or not configured."
+            "because live Groq is unavailable or not configured."
         )
     }
 
 
-def _gemini_text(
-    genome,
-    analysis,
-    module
-):
+def _groq_text(genome, analysis, module):
 
-    try:
-        from google import genai
-    except Exception:
-        return None
-
-
-    api_key = os.getenv(
-        "GEMINI_API_KEY"
-    )
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
         return None
 
-
-    client = genai.Client(
-        api_key=api_key
-    )
-
-
     prompt = f"""
 You are the educational biology and genomics
-explainer for GenomeAI, a school science
-exhibition project.
+explainer for GenomeAI, a scientific education project.
 
-Your job is to explain the supplied bioinformatics
-results in a way that feels like a knowledgeable
-teacher or ChatGPT explaining the result to a
-student.
+Explain the supplied bioinformatics results in a way
+that feels like a knowledgeable teacher explaining
+the result to a student.
 
 Do not simply repeat the numbers. Explain what
 they mean and why the measurements are useful.
@@ -296,71 +205,71 @@ GC PERCENTAGE:
 BASE COUNTS:
 {analysis.get("base_counts")}
 
-
 IMPORTANT RULES:
 
-1. Treat the supplied measurements as the source
-   of truth.
-
-2. Never invent genome measurements, variants,
-   mutations, genes, chromosomes, sequencing
-   experiments, diagnoses, or experimental results
-   that were not supplied.
-
-3. You may provide brief general biological
-   background when it helps explain the result,
-   but clearly distinguish general background
+1. Treat supplied measurements as the source of truth.
+2. Never invent genome measurements, variants, mutations,
+   genes, chromosomes, diagnoses or experimental results.
+3. Clearly distinguish general biological background
    from what GenomeAI actually measured.
-
 4. Explain technical terms in simple language.
-
 5. Do not make medical or clinical conclusions.
-
-6. Do not claim that GenomeAI sequenced the
-   organism. The data is a reference genome.
-
-7. Do not say that GC content alone determines
-   gene function, health, disease, or biological
-   effects.
-
-8. Make the response feel conversational and
-   educational rather than like a software log.
-
-9. Use short Markdown headings and paragraphs.
-   Bullet points are welcome when useful.
-
-10. Aim for roughly 180–280 words unless the
-    module naturally requires less.
-
+6. Do not claim GenomeAI sequenced the organism.
+   The data is a reference genome.
+7. GC content alone does not determine gene function,
+   health, disease or biological effects.
+8. Use short Markdown headings and paragraphs.
+9. Use bullet points when useful.
+10. Aim for roughly 180-280 words unless the module
+    naturally requires less.
 11. Begin with the main biological interpretation,
-    then explain the important measurements,
-    then explain why they matter.
-
-12. End with a short limitation or next-step
-    statement when appropriate.
+    explain the important measurements, then explain
+    why they matter.
+12. End with a limitation or useful next step.
 """
-
 
     try:
 
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt
+        response = httpx.post(
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": GROQ_MODEL,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "max_completion_tokens": 2048
+            },
+            timeout=60.0
         )
 
-        text = getattr(
-            response,
-            "text",
-            None
+        response.raise_for_status()
+
+        data = response.json()
+
+        choices = data.get("choices", [])
+
+        if not choices:
+            return None
+
+        answer = (
+            choices[0]
+            .get("message", {})
+            .get("content")
         )
 
-        if text:
-            return text.strip()
+        if answer and isinstance(answer, str):
+            return answer.strip()
 
-    except Exception:
+    except Exception as error:
 
-        return None
-
+        print(f"Groq genome insight error: {error}")
 
     return None
 
@@ -371,26 +280,24 @@ def generate_genome_insight(
     module="Genome Summary"
 ):
 
-    text = _gemini_text(
+    text = _groq_text(
         genome,
         analysis,
         module
     )
 
-
     if text:
 
         return {
             "success": True,
-            "mode": "gemini",
+            "mode": "groq",
             "module": module,
             "insight": text,
             "message": (
-                "Generated by Gemini from exact "
-                "backend analysis results."
+                "Generated by Groq from exact "
+                "backend BioPython analysis results."
             )
         }
-
 
     return _fallback(
         genome,

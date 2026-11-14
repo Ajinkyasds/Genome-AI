@@ -1,11 +1,7 @@
 import os
 import time
-
-from google import genai
-from google.genai import types
-
-from .ai_engine import GEMINI_MODEL
-
+from pathlib import Path
+import httpx
 
 # ==========================================
 # GENOMEBOT WEBSITE KNOWLEDGE
@@ -421,145 +417,131 @@ def get_fallback_reply(message, mode="questions"):
 # MAIN CHAT ENGINE — GENOMEBOT 2.0
 # ==========================================
 
+
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+
+ENV_FILE = Path(__file__).parent / ".env"
+
+if load_dotenv:
+    load_dotenv(ENV_FILE)
+
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+
 def generate_chat_reply(message, history=None, mode="questions"):
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError("Message cannot be empty.")
 
     if mode not in ("questions", "explorer"):
         mode = "questions"
 
-    if not isinstance(message, str) or not message.strip():
-        return "Please enter a question."
-
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
         return get_fallback_reply(message, mode)
 
-    history = history or []
+    selected_prompt = (
+        QUESTIONS_PROMPT if mode == "questions"
+        else EXPLORER_PROMPT
+    )
 
-    if not isinstance(history, list):
-        history = []
+    identity_prompt = '''
+AI TECHNOLOGY IDENTITY:
+- Your inference provider is Groq.
+- Your model is openai/gpt-oss-20b.
+- Never claim to be GPT-4 or another model.
+- Do not confuse the model developer with the API provider.
+'''
 
-    client = genai.Client(api_key=api_key)
+    messages = [
+        {
+            "role": "system",
+            "content": selected_prompt + "\n\n" + identity_prompt
+        }
+    ]
 
-    # Select personality and instructions.
-
-    if mode == "explorer":
-        system_prompt = EXPLORER_PROMPT
-    else:
-        system_prompt = QUESTIONS_PROMPT
-
-    # Build structured conversation history.
-
-    conversation = []
-
-    for item in history[-12:]:
-
+    for item in (history or [])[-12:]:
         if not isinstance(item, dict):
             continue
 
         role = item.get("role")
         content = item.get("content")
 
-        if role not in ("user", "assistant"):
-            continue
+        if role in ("user", "assistant") and isinstance(content, str):
+            if content.strip():
+                messages.append({
+                    "role": role,
+                    "content": content[:3000]
+                })
 
-        if not isinstance(content, str) or not content.strip():
-            continue
+    messages.append({
+        "role": "user",
+        "content": message.strip()
+    })
 
-        conversation.append(
-            types.Content(
-                role="user" if role == "user" else "model",
-                parts=[
-                    types.Part.from_text(
-                        text=content[:3000]
-                    )
-                ]
-            )
-        )
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": messages,
+        "max_completion_tokens": 2048
+    }
 
-    # Add the current question.
-
-    conversation.append(
-        types.Content(
-            role="user",
-            parts=[
-                types.Part.from_text(
-                    text=message.strip()
-                )
-            ]
-        )
-    )
-
-    # Generate the response.
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
 
     for attempt in range(3):
-
         try:
-
-            response = client.models.generate_content(
-
-                model=GEMINI_MODEL,
-
-                contents=conversation,
-
-                config=types.GenerateContentConfig(
-
-                    system_instruction=system_prompt,
-
-                    temperature=0.7,
-
-                    max_output_tokens=2500
-                )
+            response = httpx.post(
+                GROQ_URL,
+                headers=headers,
+                json=payload,
+                timeout=60.0
             )
 
-            answer = getattr(response, "text", None)
+            response.raise_for_status()
+            data = response.json()
 
-            if not answer or not answer.strip():
+            choices = data.get("choices", [])
 
-                raise RuntimeError(
-                    "Gemini returned an empty response."
-                )
+            if not choices:
+                raise RuntimeError("Groq returned no response choices.")
+
+            answer = choices[0].get("message", {}).get("content")
+
+            if not isinstance(answer, str) or not answer.strip():
+                raise RuntimeError("Groq returned an empty response.")
 
             return answer.strip()
 
-        except Exception as error:
+        except httpx.HTTPStatusError as error:
+            status = error.response.status_code
 
-            error_text = str(error).upper()
-
-            quota_error = (
-                "429" in error_text
-                or "RESOURCE_EXHAUSTED" in error_text
-                or "QUOTA" in error_text
-            )
-
-            if quota_error:
-
-                print(
-                    "GenomeBot: Gemini quota exhausted."
-                )
-
+            if status == 429:
+                if attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+                    continue
                 return get_fallback_reply(message, mode)
 
-            temporary_error = (
-                "503" in error_text
-                or "UNAVAILABLE" in error_text
-            )
-
-            if temporary_error and attempt < 2:
-
-                wait_time = 2 * (attempt + 1)
-
-                print(
-                    f"GenomeBot temporarily unavailable. "
-                    f"Retrying in {wait_time} seconds."
-                )
-
-                time.sleep(wait_time)
-
+            if (status >= 500 or status == 408) and attempt < 2:
+                time.sleep(2 * (attempt + 1))
                 continue
 
-            print(
-                f"GenomeBot AI error: {error}"
+            raise RuntimeError(
+                f"GenomeBot Groq API error ({status}): "
+                f"{error.response.text[:500]}"
             )
 
-            return get_fallback_reply(message, mode)
+        except httpx.TimeoutException:
+            if attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+
+            raise RuntimeError("GenomeBot Groq request timed out.")
+
+    return get_fallback_reply(message, mode)
