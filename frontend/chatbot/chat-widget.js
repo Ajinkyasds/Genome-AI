@@ -9,6 +9,57 @@
     css.href = new URL("./chat-widget.css", scriptURL).href;
     document.head.appendChild(css);
 
+    // Additional window controls — injected through JavaScript
+    const windowStyles = document.createElement("style");
+
+    windowStyles.textContent = `
+        #genomebot-window.gb-fullscreen {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-width: none !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+            z-index: 1000001 !important;
+            border: none !important;
+        }
+
+        #genomebot-window.gb-fullscreen .gb-header {
+            flex-shrink: 0;
+        }
+
+        #genomebot-window.gb-fullscreen .gb-messages {
+            flex: 1;
+            min-height: 0;
+        }
+
+        #genomebot-window.gb-fullscreen .gb-controls button {
+            width: 34px;
+            height: 34px;
+        }
+
+        #genomebot-window.gb-fullscreen .gb-message {
+            max-width: 85%;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        #genomebot-window.gb-fullscreen #gb-input {
+            font-size: 15px;
+        }
+
+        @media (max-width: 600px) {
+            #genomebot-window:not(.gb-fullscreen) {
+                width: calc(100vw - 24px);
+                max-height: calc(100dvh - 100px);
+            }
+        }
+    `;
+
+    document.head.appendChild(windowStyles);
+
     // Markdown libraries
     const markedScript = document.createElement("script");
     markedScript.src =
@@ -51,8 +102,17 @@
                 </div>
 
                 <div class="gb-controls">
-                    <button id="gb-minimize" aria-label="Minimize">−</button>
-                    <button id="gb-close" aria-label="Close">×</button>
+                    <button id="gb-maximize"
+                        aria-label="Maximize"
+                        title="Maximize">⛶</button>
+
+                    <button id="gb-minimize"
+                        aria-label="Minimize"
+                        title="Minimize">−</button>
+
+                    <button id="gb-close"
+                        aria-label="Close"
+                        title="Close">×</button>
                 </div>
 
             </header>
@@ -131,6 +191,9 @@
 
     const modeButtons =
         document.querySelectorAll(".gb-mode-button");
+
+    const maximizeButton =
+        document.getElementById("gb-maximize");
 
     const API_URL =
         "https://genome-ai-1-o993.onrender.com/chat";
@@ -257,6 +320,8 @@
 
     function closeChat() {
 
+        restoreWindow();
+
         chatWindow.classList.remove("gb-visible");
         launcher.classList.remove("gb-hidden");
 
@@ -271,6 +336,59 @@
 
     document.getElementById("gb-close")
         .addEventListener("click", closeChat);
+
+    // MAXIMIZE AND RESTORE WINDOW
+
+    function maximizeWindow() {
+
+        chatWindow.classList.add("gb-fullscreen");
+
+        maximizeButton.textContent = "↙";
+        maximizeButton.setAttribute("aria-label", "Restore");
+        maximizeButton.title = "Restore window";
+
+        input.focus();
+
+    }
+
+    function restoreWindow() {
+
+        chatWindow.classList.remove("gb-fullscreen");
+
+        maximizeButton.textContent = "⛶";
+        maximizeButton.setAttribute("aria-label", "Maximize");
+        maximizeButton.title = "Maximize window";
+
+    }
+
+    maximizeButton.addEventListener("click", () => {
+
+        if (chatWindow.classList.contains("gb-fullscreen")) {
+
+            restoreWindow();
+
+        } else {
+
+            maximizeWindow();
+
+        }
+
+    });
+
+    // ESCAPE TO RESTORE
+
+    document.addEventListener("keydown", event => {
+
+        if (
+            event.key === "Escape" &&
+            chatWindow.classList.contains("gb-fullscreen")
+        ) {
+
+            restoreWindow();
+
+        }
+
+    });
 
     // DISPLAY MESSAGES
 
