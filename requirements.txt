@@ -3,3 +3,4 @@ uvicorn
 biopython
 python-dotenv
 google-genai
+httpx
