@@ -79,3 +79,23 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}b
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition-duration:.01ms!important}}
 
 .command-palette{position:fixed;inset:0;z-index:350;display:grid;place-items:center;padding:18px}.palette-backdrop{position:absolute;inset:0;background:rgba(0,5,9,.76);backdrop-filter:blur(9px)}.palette-box{position:relative;width:min(540px,100%);padding:14px;border:1px solid var(--line2);border-radius:15px;background:#071a25;box-shadow:var(--shadow)}.palette-top{display:flex;justify-content:space-between;color:#5e7885;font:7px "DM Mono"}.palette-top button{border:0;background:transparent;color:#6f8996;font:7px "DM Mono"}.palette-box>input{width:100%;height:45px;margin-top:11px;padding:0 11px;border:1px solid var(--line);border-radius:9px;outline:0;color:var(--text);background:rgba(0,0,0,.16);font-size:11px}.palette-options{display:grid;gap:6px;margin-top:9px}.palette-options button{min-height:38px;padding:0 10px;border:1px solid transparent;border-radius:8px;color:#8ca7b2;background:transparent;text-align:left;font-size:9px}.palette-options button:hover{border-color:var(--line);background:rgba(255,255,255,.025);color:var(--text)}.list-placeholder{color:#627d8b;font-size:8px}.small-outline-button{min-height:32px;padding:0 10px;border:1px solid rgba(94,227,167,.16);border-radius:7px;color:var(--green);background:rgba(94,227,167,.04);font:7px "DM Mono"}.architecture-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:19px}.architecture-tags span{padding:6px 8px;border:1px solid var(--line);border-radius:6px;color:#738e9a;font:7px "DM Mono"}.science-banner{display:flex;align-items:center;gap:14px;padding:15px 17px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.018)}.science-banner-icon{width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(94,227,167,.2);border-radius:50%;color:var(--green);flex:0 0 auto}.science-banner strong{font-size:10px}.science-banner p{margin-top:3px;color:#637d88;font-size:8px}.site-footer{border-top:1px solid var(--line);background:rgba(1,7,12,.6)}.site-footer .brand-mark{width:27px;height:27px;font-size:14px}
+
+/* GENOMICS cross-site navigation */
+.nav .nav-feature {
+    padding: 9px 13px;
+    border: 1px solid rgba(98,227,168,.35);
+    border-radius: 9px;
+    color: #75e8c1;
+    background: rgba(98,227,168,.08);
+    font-weight: 700;
+    transition: .22s;
+}
+.nav .nav-feature:hover {
+    color: #04131a;
+    background: linear-gradient(135deg,#7ceef0,#62dfa8);
+    transform: translateY(-2px);
+}
+
+
+
+
