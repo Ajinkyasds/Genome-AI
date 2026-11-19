@@ -204,7 +204,7 @@
 
   async function searchGenome(name, options = {}) {
     const query = String(name || "").trim();
-    const jumpToAnalysis = options.jumpToAnalysis ? true;
+    const jumpToAnalysis = Boolean(options.jumpToAnalysis);
     if (!query) {
       toast("Enter an organism first.");
       return;
@@ -802,4 +802,5 @@ function initHeader() {
     void initHealth();
   });
 })();
+
 
