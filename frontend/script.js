@@ -694,7 +694,7 @@ function initHeader() {
     });
 
     $("emptyRunButton")?.addEventListener("click", () => {
-      searchGenome("Saccharomyces cerevisiae", { jumpToAnalysis: true });
+      searchGenome(new URLSearchParams(location.search).get("organism") || sessionStorage.getItem("genomeai_last_genome") || "Saccharomyces cerevisiae", { jumpToAnalysis: true });
     });
 
     $("quickAIButton")?.addEventListener("click", () => {
