@@ -1,4 +1,4 @@
-from Bio import SeqIO
+﻿from Bio import SeqIO
 
 def analyze_fasta_files(files):
     sequences = []
@@ -7,20 +7,58 @@ def analyze_fasta_files(files):
             for record in SeqIO.parse(str(file_path), "fasta"):
                 sequence = str(record.seq).upper()
                 if sequence:
-                    sequences.append({"id": record.id, "description": record.description, "sequence": sequence, "file": file_path.name})
+                    sequences.append({
+                        "id": record.id,
+                        "description": record.description,
+                        "sequence": sequence,
+                        "file": file_path.name
+                    })
         except Exception as error:
             print(f"Could not read {file_path}: {error}")
-    unique = {}
-    for item in sequences:
-        unique.setdefault(item["sequence"], item)
-    sequences = list(unique.values())
-    total_length = count_a = count_t = count_g = count_c = 0
+
     valid = set("ATGC")
+    counts = {base: 0 for base in "ATGC"}
+    total_length = 0
     sequence_details = []
+
     for item in sequences:
-        s=item["sequence"]
-        total_length += len(s); count_a += s.count("A"); count_t += s.count("T"); count_g += s.count("G"); count_c += s.count("C")
-        valid_count=sum(base in valid for base in s)
-        sequence_details.append({"id":item["id"],"description":item["description"],"length":len(s),"file":item["file"],"valid_bases":valid_count,"contains_ambiguous_bases":valid_count != len(s)})
-    gc=((count_g+count_c)/total_length*100) if total_length else 0
-    return {"sequence_count":len(sequences),"genome_length":total_length,"base_counts":{"A":count_a,"T":count_t,"G":count_g,"C":count_c},"gc_percentage":round(gc,2),"sequence_details":sequence_details}
+        s = item["sequence"]
+        total_length += len(s)
+        for base in counts:
+            counts[base] += s.count(base)
+
+        valid_count = sum(base in valid for base in s)
+        sequence_details.append({
+            "id": item["id"],
+            "description": item["description"],
+            "length": len(s),
+            "file": item["file"],
+            "valid_bases": valid_count,
+            "ambiguous_bases": len(s) - valid_count,
+            "contains_ambiguous_bases": valid_count != len(s)
+        })
+
+    canonical_count = sum(counts.values())
+    ambiguous_count = total_length - canonical_count
+
+    gc = (
+        (counts["G"] + counts["C"]) / canonical_count * 100
+        if canonical_count else 0
+    )
+
+    percentages = {
+        base: round(count / canonical_count * 100, 2)
+        if canonical_count else 0
+        for base, count in counts.items()
+    }
+
+    return {
+        "sequence_count": len(sequences),
+        "genome_length": total_length,
+        "base_counts": counts,
+        "gc_percentage": round(gc, 2),
+        "sequence_details": sequence_details,
+        "canonical_base_count": canonical_count,
+        "ambiguous_bases": ambiguous_count,
+        "canonical_base_percentages": percentages
+    }

@@ -49,7 +49,7 @@ def _fallback(genome, analysis, module):
         _safe_number(analysis.get("sequence_count", 0))
     )
 
-    total = max(length, 1)
+    total = max(int(_safe_number(analysis.get("canonical_base_count", length))), 1)
 
     percentages = {
         base: round(
@@ -167,6 +167,75 @@ def _groq_text(genome, analysis, module):
     if not api_key:
         return None
 
+    module_instructions = {
+        "Genome Summary": """
+Produce an integrated overview of the selected reference genome.
+Cover:
+1. A compelling scientific headline.
+2. Organism and assembly identity.
+3. Genome length, sequence count and GC percentage.
+4. What these measurements reveal about the genome.
+5. Scientific significance supported by available evidence.
+6. Important limitations and further exploration.
+
+Focus on the overall genomic profile. Do not produce separate
+Base Composition, Biological Context or Research Questions reports.
+""",
+
+        "Base Composition": """
+Perform a focused nucleotide composition analysis.
+Cover:
+1. A composition-focused headline.
+2. A table containing A, T, G and C counts and percentages.
+3. Total GC and AT percentages.
+4. Interpretation of the relative nucleotide frequencies.
+5. What the measurements can and cannot establish.
+6. Useful follow-up composition analyses.
+
+Use the supplied counts accurately. Do not infer gene function,
+adaptation, chromosome identity or biological outcomes from GC
+content alone. Do not produce a general genome summary.
+""",
+
+        "Biological Context": """
+Explain the biological context of the selected organism.
+Cover:
+1. A biology-focused headline.
+2. Established biological background about the organism.
+3. Connections between that background and the supplied genome
+   measurements, clearly distinguishing facts from interpretation.
+4. Broader biological relevance.
+5. Evidence limitations.
+6. Further biological investigations.
+
+Do not invent organism-specific traits or claim that genome
+measurements prove a particular biological function. Clearly
+distinguish established background from measured results.
+Do not produce separate composition or research-question reports.
+""",
+
+        "Research Questions": """
+Develop a focused research agenda based on the supplied genome data.
+Cover:
+1. A research-focused headline.
+2. What the supplied measurements establish.
+3. Four to six specific, testable research questions.
+4. Why each question matters.
+5. Suitable computational methods for investigating them.
+6. Additional datasets or experimental evidence required.
+
+Questions must be relevant to the actual available data.
+Do not present proposed analyses as completed discoveries.
+Do not invent genes, mutations, variants or experimental findings.
+Do not produce a general genome summary.
+"""
+    }
+
+    module_instruction = module_instructions.get(
+        module,
+        module_instructions["Genome Summary"]
+    )
+
     prompt = f"""
 You are GenomeAI, an advanced scientific intelligence assistant specializing in genomics and bioinformatics.
 
@@ -194,6 +263,15 @@ GROUP:
 REFERENCE ASSEMBLY:
 {genome.get("reference_assembly")}
 
+REFERENCE SOURCE:
+{genome.get("source")}
+
+REFERENCE TAXONOMY:
+{genome.get("taxonomy")}
+
+REFERENCE SUMMARY:
+{genome.get("summary")}
+
 SEQUENCE COUNT:
 {analysis.get("sequence_count")}
 
@@ -206,39 +284,63 @@ GC PERCENTAGE:
 BASE COUNTS:
 {analysis.get("base_counts")}
 
-MODULE-SPECIFIC REPORT STRUCTURES:
+CANONICAL BASE COUNT:
+{analysis.get("canonical_base_count")}
 
-GENOME SUMMARY:
-1. Compelling scientific headline.
-2. Genome at a Glance.
-3. Understanding the Genome.
-4. Scientific Significance.
-5. Limitations.
-6. Further Exploration.
+AMBIGUOUS BASE COUNT:
+{analysis.get("ambiguous_bases")}
 
-BASE COMPOSITION:
-1. Engaging composition headline.
-2. Nucleotide Composition Snapshot.
-3. Interpreting the Pattern.
-4. Why It Matters.
-5. Scientific Caution.
-6. Further Exploration.
+CANONICAL BASE PERCENTAGES:
+{analysis.get("canonical_base_percentages")}
 
-BIOLOGICAL CONTEXT:
-1. Biological headline.
-2. Relevant Biological Background.
-3. Connecting Biology with Measurements.
-4. Broader Scientific Significance.
-5. Evidence Limitations.
-6. Further Exploration.
+SEQUENCE RECORD DETAILS:
+{analysis.get("sequence_details", [])}
 
-RESEARCH QUESTIONS:
-1. Research headline.
-2. What We Already Know.
-3. Four to six specific research questions.
-4. Why These Questions Matter.
-5. Suggested Computational Methods.
-6. Additional Evidence Required.
+DATA PROVENANCE AND EVIDENCE RULES:
+- Treat the supplied genome fields as the actual computational input.
+- Never invent or assume genes, mutations, variants, chromosomes, contigs, scaffolds, organelles or experiments.
+- Treat the supplied reference assembly, source and taxonomy as reference metadata.
+- Treat FASTA descriptions as record-level annotations supplied with the reference data.
+- You may report chromosome or organelle identities explicitly stated in those descriptions.
+- Do not infer biological identities beyond what the supplied metadata explicitly states.
+- Keep reference annotations distinct from independently measured sequence statistics.
+- Calculate nucleotide percentages using canonical A/T/G/C bases, excluding ambiguous bases.
+- Report ambiguous bases separately.
+- Never infer assembly completeness from sequence count alone.
+- Do not infer chromosome count, chromosome identity, mitochondrial identity or strain identity from sequence count or genome statistics alone.
+- Report these details when explicitly supported by the supplied reference metadata or FASTA descriptions.
+- Do not infer assembly completeness from sequence count alone.
+- Do not introduce chromosome counts, mitochondrial genome descriptions or strain identities as organism background unless supported by verified metadata for the selected reference.
+- Clearly distinguish general species background from facts about the specific reference assembly.
+- Never use general species knowledge to assign identities to records in the selected reference assembly.
+- Do not state chromosome counts, ploidy, mitochondrial organization or genome architecture unless independently verified and explicitly sourced.
+- Never describe sequence counts as consistent with a particular chromosome arrangement.
+- Do not claim that measured genome size matches an expected biological structure without verified comparative evidence.
+- Do not suggest mechanistic effects on codon usage, transcription or gene expression from overall GC percentage alone.
+- Avoid terms such as well-characterized, comprehensive, canonical, high-quality and expected unless supporting evidence is supplied.
+- In the Biological Context module, prioritize cautious biological explanation over speculative interpretation.
+- Do not attribute transcriptional regulation, promoter characteristics, genome architecture or metabolic capabilities to measured nucleotide composition without supporting analysis.
+- Do not describe promoter regions as AT-rich unless promoter sequences have actually been analysed.
+- Do not claim that GC content explains transcription, adaptation or other biological mechanisms.
+- Do not label a genome compact without suitable comparative or annotation evidence.
+- Zero ambiguous bases does not establish sequencing quality.
+- Do not describe an assembly as comprehensive, complete, bias-free or high-quality without supporting evidence.
+- When evidence is unavailable, explicitly state: "Not established by the supplied dataset."
+- Do not invent gene counts, gene annotations, strain identities or functional findings.
+- Distinguish supplied measurements from established biological knowledge and hypotheses.
+- GC content alone cannot establish evolutionary adaptation, environmental history, gene function or phenotype.
+- Do not claim causal relationships without supporting evidence.
+- Explicitly identify information that is unavailable in the supplied dataset.
+- Suggested analyses are proposals, not completed investigations.
+- Never present a hypothesis or inference as a measured discovery.
+- Do not make medical or clinical conclusions.
+- GenomeAI analyses reference data; it does not claim to have sequenced the organism.
+
+SELECTED MODULE INSTRUCTIONS:
+{module_instruction}
+
+Generate ONLY the selected module's report.
+Do not include sections belonging to other modules.
 
 SCIENTIFIC INTEGRITY:
 - Treat supplied measurements as the source of truth.

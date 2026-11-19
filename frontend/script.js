@@ -1,4 +1,4 @@
-﻿/* GenomeAI â€” one shared interaction layer for every page. */
+﻿/* GenomeAI - one shared interaction layer for every page. */
 (() => {
   "use strict";
 
@@ -36,7 +36,7 @@
   };
 
   function esc(value) {
-    return String(value ?? "")
+    return String(value ? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
@@ -46,7 +46,7 @@
 
   function fmt(value) {
     const n = Number(value);
-    return Number.isFinite(n) ? n.toLocaleString("en-IN") : "â€”";
+    return Number.isFinite(n) ? n.toLocaleString("en-IN") : "-";
   }
 
   function toast(message) {
@@ -145,10 +145,10 @@
     if (!result || !state.genome) return;
     result.classList.remove("hidden");
     if (!state.analysis) {
-      result.innerHTML = `<strong>Profile loaded:</strong> ${esc(state.genome.scientific_name)} Â· ${esc(state.genome.common_name)} Â· taxonomy/knowledge profile available Â· sequence file not installed locally.`;
+      result.innerHTML = `<strong>Profile loaded:</strong> ${esc(state.genome.scientific_name)} | ${esc(state.genome.common_name)} | taxonomy/knowledge profile available | sequence file not installed locally.`;
       return;
     }
-    result.innerHTML = `<strong>Genome loaded:</strong> ${esc(state.genome.scientific_name)} Â· ${esc(state.genome.common_name)} Â· ${fmt(state.analysis.genome_length)} bp Â· ${esc(state.genome.source)}`;
+    result.innerHTML = `<strong>Genome loaded:</strong> ${esc(state.genome.scientific_name)} | ${esc(state.genome.common_name)} | ${fmt(state.analysis.genome_length)} bp | ${esc(state.genome.source)}`;
   }
 
   function renderAnalysis() {
@@ -204,7 +204,7 @@
 
   async function searchGenome(name, options = {}) {
     const query = String(name || "").trim();
-    const jumpToAnalysis = options.jumpToAnalysis ?? true;
+    const jumpToAnalysis = options.jumpToAnalysis ? true;
     if (!query) {
       toast("Enter an organism first.");
       return;
@@ -213,7 +213,7 @@
     const button = $("searchButton");
     if (button) {
       button.disabled = true;
-      button.textContent = "LOADINGâ€¦";
+      button.textContent = "LOADING...";
     }
     setStatus("SEARCHING REFERENCE INDEX");
 
@@ -234,10 +234,10 @@
       renderSearchResult();
 
       if (result.profileOnly) {
-        setStatus("PROFILE READY Â· NO LOCAL FASTA");
+        setStatus("PROFILE READY | NO LOCAL FASTA");
         toast(`${result.genome.common_name} profile loaded.`);
         if (location.pathname.endsWith("organisms.html")) {
-          showModal("ORGANISM PROFILE", result.genome.scientific_name, `<p><strong>${esc(result.genome.common_name)}</strong> Â· ${esc(result.genome.group)}</p><p>${esc(result.genome.summary || "Knowledge profile available.")}</p><p>The exact analysis dashboard requires a local FASTA/FNA reference file. The taxonomy/profile view is still available for this organism.</p>`);
+          showModal("ORGANISM PROFILE", result.genome.scientific_name, `<p><strong>${esc(result.genome.common_name)}</strong> | ${esc(result.genome.group)}</p><p>${esc(result.genome.summary || "Knowledge profile available.")}</p><p>The exact analysis dashboard requires a local FASTA/FNA reference file. The taxonomy/profile view is still available for this organism.</p>`);
         }
         return;
       }
@@ -265,7 +265,7 @@
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = "ANALYZE â†’";
+        button.textContent = "ANALYZE ->";
       }
     }
   }
@@ -304,12 +304,12 @@
     const button = $("aiMainButton");
     if (button) {
       button.disabled = true;
-      button.textContent = "GENEVA IS THINKINGâ€¦";
+      button.textContent = "GENEVA IS THINKING...";
     }
     $("aiMode") && ($("aiMode").textContent = "MODE: REQUESTING");
     $("aiConsoleTitle") && ($("aiConsoleTitle").textContent = "GENEVA is interpreting");
     $("aiConsoleSubtitle") && ($("aiConsoleSubtitle").textContent = "Exact measurements are already calculated.");
-    $("aiConsoleOutput") && ($("aiConsoleOutput").textContent = "Connecting to the interpretation layerâ€¦\n\n");
+    $("aiConsoleOutput") && ($("aiConsoleOutput").textContent = "Connecting to the interpretation layer...\n\n");
 
     try {
       const data = await apiGet("/ai-insight", {
@@ -341,7 +341,7 @@
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = "GENERATE INSIGHT âœ¦";
+        button.textContent = "GENERATE INSIGHT *";
       }
     }
   }
@@ -694,7 +694,7 @@ function initHeader() {
         const profile = JSON.parse(saved);
         $("profilePreview")?.classList.remove("hidden");
         $("profilePreviewName") && ($("profilePreviewName").textContent = profile.name || "");
-        $("profilePreviewMobile") && ($("profilePreviewMobile").textContent = `Demo profile Â· mobile ending ${(profile.mobile || "").slice(-4)}`);
+        $("profilePreviewMobile") && ($("profilePreviewMobile").textContent = `Demo profile | mobile ending ${(profile.mobile || "").slice(-4)}`);
       }
     } catch {
       sessionStorage.removeItem("genomeai_profile");
@@ -711,7 +711,7 @@ function initHeader() {
       sessionStorage.setItem("genomeai_profile", JSON.stringify(profile));
       $("profilePreview")?.classList.remove("hidden");
       $("profilePreviewName") && ($("profilePreviewName").textContent = name);
-      $("profilePreviewMobile") && ($("profilePreviewMobile").textContent = `Demo profile Â· mobile ending ${mobile.slice(-4)}`);
+      $("profilePreviewMobile") && ($("profilePreviewMobile").textContent = `Demo profile | mobile ending ${mobile.slice(-4)}`);
       toast("Demo profile saved for this browser session.");
     });
 
@@ -723,13 +723,13 @@ function initHeader() {
     $("signupTab")?.addEventListener("click", () => {
       $("signupTab")?.classList.add("active");
       $("loginTab")?.classList.remove("active");
-      $("authAction") && ($("authAction").textContent = "CREATE DEMO ACCOUNT â†’");
+      $("authAction") && ($("authAction").textContent = "CREATE DEMO ACCOUNT ->");
     });
 
     $("loginTab")?.addEventListener("click", () => {
       $("loginTab")?.classList.add("active");
       $("signupTab")?.classList.remove("active");
-      $("authAction") && ($("authAction").textContent = "LOGIN TO DEMO â†’");
+      $("authAction") && ($("authAction").textContent = "LOGIN TO DEMO ->");
     });
   }
 
