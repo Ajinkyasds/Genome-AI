@@ -317,7 +317,18 @@
         module: aiLabels[module] || aiLabels.summary
       });
       if (!data.success) throw new Error(data.message || "No insight returned.");
-      $("aiConsoleOutput") && ($("aiConsoleOutput").textContent = data.insight || "No insight returned.");
+      const output = $("aiConsoleOutput");
+      const markdown = data.insight || "No insight returned.";
+
+      if (output) {
+        if (window.marked && window.DOMPurify) {
+          output.innerHTML = window.DOMPurify.sanitize(
+            window.marked.parse(markdown)
+          );
+        } else {
+          output.textContent = markdown;
+        }
+      }
       $("aiMode") && ($("aiMode").textContent = `MODE: ${(data.mode || "LIVE").toUpperCase()}`);
       state.lastAIText = data.insight || "";
       sessionStorage.setItem("genomeai_last_ai", state.lastAIText);
