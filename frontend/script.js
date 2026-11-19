@@ -1,4 +1,4 @@
-﻿/* GenomeAI - one shared interaction layer for every page. */
+/* GenomeAI - one shared interaction layer for every page. */
 (() => {
   "use strict";
 
@@ -579,39 +579,107 @@ function initHeader() {
   }
 
   function initAnalysis() {
+    function showModule(module) {
+      const a = state.analysis;
+      const g = state.genome;
+      if (!a || !g) return;
+
+      const titles = {
+        overview: "Genome overview",
+        composition: "Base composition",
+        structure: "Genome structure",
+        validation: "Sequence validation",
+        comparison: "Reference compare"
+      };
+
+      $("analysisModuleTitle").textContent = titles[module] || titles.overview;
+
+      const b = a.base_counts || {};
+      const records = a.sequence_details || [];
+      const structure = a.structure || {};
+      const validation = a.validation || {};
+      const canonical = Number(a.canonical_base_count || 0);
+      const ambiguous = Number(a.ambiguous_bases || 0);
+      const unsupported = Number(a.unsupported_bases || 0);
+
+      let title = "";
+      let message = "";
+
+      if (module === "overview") {
+        title = `${fmt(a.genome_length)} total base pairs`;
+        message = `${a.sequence_count} non-empty reference records; GC content is ${a.gc_percentage}%. Source: ${g.source || "Not specified"}.`;
+      } else if (module === "composition") {
+        title = `GC ${a.gc_percentage}% ? AT ${a.at_percentage ?? "Unavailable"}%`;
+        message = `A: ${fmt(b.A || 0)} | T: ${fmt(b.T || 0)} | G: ${fmt(b.G || 0)} | C: ${fmt(b.C || 0)}. GC/AT ratio: ${a.gc_at_ratio ?? "Unavailable"}. Percentages use canonical A/T/G/C bases only.`;
+      } else if (module === "structure") {
+        title = `${records.length} sequence records`;
+        message = `Minimum length: ${fmt(structure.minimum_record_length ?? 0)} bp. Maximum: ${fmt(structure.maximum_record_length ?? 0)} bp. Average: ${fmt(structure.average_record_length ?? 0)} bp.`;
+      } else if (module === "validation") {
+        title = validation.validation_status === "no_issues_detected" ? "No sequence issues detected" : "Sequence validation findings";
+        message = `Records checked: ${validation.records_checked ?? records.length}. Records with IUPAC ambiguity codes: ${validation.records_with_ambiguous_bases ?? 0}. Records with unsupported symbols: ${validation.records_with_unsupported_symbols ?? 0}. Ambiguous bases: ${ambiguous}; unsupported symbols: ${unsupported}.`;
+      } else {
+        title = "Second reference required";
+        message = "A genuine comparison needs a second reference genome or FASTA dataset. No comparison has been calculated.";
+      }
+
+      $("quickInsightTitle").textContent = title;
+      $("quickInsightText").textContent = message;
+
+      const compositionPanel = $("compositionTotal")?.closest(".data-panel");
+      const structurePanel = $("recordList")?.closest(".data-panel");
+      const panels = [compositionPanel, structurePanel].filter(Boolean);
+
+      panels.forEach(panel => panel.style.display = "none");
+
+      if (module === "composition" && compositionPanel) {
+        compositionPanel.style.display = "";
+      } else if (module === "structure" && structurePanel) {
+        structurePanel.style.display = "";
+      } else if (module === "overview") {
+        panels.forEach(panel => panel.style.display = "");
+      } else if (module === "validation" && structurePanel) {
+        structurePanel.style.display = "";
+        if ($("recordList")) {
+          $("recordList").innerHTML = records.length
+            ? records.map(record => `
+                <div class="record">
+                  <div>
+                    <strong>${esc(record.id)}</strong>
+                    <small>${record.contains_unsupported_symbols ? "Unsupported symbols detected" : record.contains_ambiguous_bases ? "IUPAC ambiguity codes present" : "No ambiguity or unsupported symbols detected"}</small>
+                  </div>
+                  <em>${fmt(record.ambiguous_bases || 0)} ambiguous ? ${fmt(record.unsupported_bases || 0)} unsupported</em>
+                </div>
+              `).join("")
+            : "<div class='list-placeholder'>No sequence records.</div>";
+        }
+      }
+
+      if (module !== "validation" && $("recordList")) {
+        $("recordList").innerHTML = records.length
+          ? records.map(record => `
+              <div class="record">
+                <div>
+                  <strong title="${esc(record.id)}">${esc(record.id)}</strong>
+                  <small title="${esc(record.description || "")}">${esc(record.description || "Reference sequence")}</small>
+                </div>
+                <em>${fmt(record.length)} bp</em>
+              </div>
+            `).join("")
+          : "<div class='list-placeholder'>No sequence records.</div>";
+      }
+
+      if (module === "validation" && structurePanel) {
+        structurePanel.querySelector("h3").textContent = "Record validation";
+      } else if (structurePanel) {
+        structurePanel.querySelector("h3").textContent = "Sequence records";
+      }
+    }
+
     $$(".module[data-module]").forEach(button => {
       button.addEventListener("click", () => {
         $$(".module[data-module]").forEach(item => item.classList.remove("active"));
         button.classList.add("active");
-        const module = button.dataset.module;
-        const titles = {
-          overview: "Genome overview",
-          composition: "Base composition",
-          structure: "Genome structure",
-          validation: "Sequence validation",
-          comparison: "Reference compare"
-        };
-        $("analysisModuleTitle") && ($("analysisModuleTitle").textContent = titles[module] || "Genome overview");
-
-        if (!state.analysis) return;
-        if (module === "validation") {
-          const ambiguous = (state.analysis.sequence_details || []).filter(record => record.contains_ambiguous_bases).length;
-          $("quickInsightTitle") && ($("quickInsightTitle").textContent = ambiguous ? `${ambiguous} records contain ambiguous bases` : "Sequence validation passed");
-          $("quickInsightText") && ($("quickInsightText").textContent = ambiguous ? "Some records contain characters outside A/T/G/C." : "Every returned record uses explicit A/T/G/C bases.");
-        }
-        if (module === "composition") {
-          const b = state.analysis.base_counts || {};
-          $("quickInsightTitle") && ($("quickInsightTitle").textContent = `GC content: ${state.analysis.gc_percentage}%`);
-          $("quickInsightText") && ($("quickInsightText").textContent = `G and C together account for ${fmt(Number(b.G || 0) + Number(b.C || 0))} bases in the analyzed reference.`);
-        }
-        if (module === "structure") {
-          $("quickInsightTitle") && ($("quickInsightTitle").textContent = `${state.analysis.sequence_count} sequence records`);
-          $("quickInsightText") && ($("quickInsightText").textContent = "The records are shown individually in the sequence panel.");
-        }
-        if (module === "comparison") {
-          $("quickInsightTitle") && ($("quickInsightTitle").textContent = "Controlled comparison module");
-          $("quickInsightText") && ($("quickInsightText").textContent = "A deliberate teaching comparison is available in the Project/learning content.");
-        }
+        showModule(button.dataset.module);
       });
     });
 
@@ -625,33 +693,12 @@ function initHeader() {
       });
     });
 
-    $("runAnalysisButton")?.addEventListener("click", () => {
-      if (state.genome) searchGenome(state.genome.scientific_name, { jumpToAnalysis: false });
-      else searchGenome("Saccharomyces cerevisiae", { jumpToAnalysis: false });
+    const runButton = $("runAnalysisButton");
+    if (runButton) runButton.addEventListener("click", () => {
+      const active = document.querySelector(".module[data-module].active");
+      if (active) showModule(active.dataset.module);
     });
-    $("emptyRunButton")?.addEventListener("click", () => {
-      go("analysis.html", { organism: "Saccharomyces cerevisiae" });
-    });
-    $("exportButton")?.addEventListener("click", exportReport);
-    $("resetButton")?.addEventListener("click", resetAnalysis);
-    $("quickAIButton")?.addEventListener("click", () => go("ai-lab.html", { organism: state.genome?.scientific_name || "Saccharomyces cerevisiae" }));
-
-    const query = getCurrentOrganismFromURL();
-    const cached = sessionStorage.getItem("genomeai_last_analysis");
-    if (query) {
-      setTimeout(() => searchGenome(query, { jumpToAnalysis: false }), 100);
-    } else if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        state.genome = parsed.genome;
-        state.analysis = parsed.analysis;
-        renderAnalysis();
-      } catch {
-        // Ignore stale storage.
-      }
-    }
   }
-
   function initAI() {
     $$(".ai-module button[data-ai]").forEach(button => {
       button.addEventListener("click", () => {
