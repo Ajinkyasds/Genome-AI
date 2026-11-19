@@ -693,6 +693,10 @@ function initHeader() {
       });
     });
 
+    $("emptyRunButton")?.addEventListener("click", () => {
+      searchGenome("Saccharomyces cerevisiae", { jumpToAnalysis: true });
+    });
+
     const runButton = $("runAnalysisButton");
     if (runButton) runButton.addEventListener("click", () => {
       const active = document.querySelector(".module[data-module].active");
