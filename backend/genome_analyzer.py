@@ -1,68 +1,109 @@
-﻿from Bio import SeqIO
-from collections import Counter
+﻿from collections import Counter
 from pathlib import Path
-import statistics
 
 IUPAC = set("ACGTRYSWKMBDHVN")
 CANONICAL = set("ATGC")
 
-def analyze_fasta_files(files):
-    sequences = []
-    for file_path in files:
-        try:
-            for record in SeqIO.parse(str(file_path), "fasta"):
-                sequence = str(record.seq).upper()
-                if sequence:
-                    sequences.append({
-                        "id": record.id,
-                        "description": record.description,
-                        "sequence": sequence,
-                        "file": Path(file_path).name
-                    })
-        except Exception as error:
-            print(f"Could not read {file_path}: {error}")
 
+def _analyze_fasta_files_uncached(files):
     counts = Counter()
-    sequence_details = []
-    total_length = 0
     iupac_counts = Counter()
     unsupported_counts = Counter()
 
-    for item in sequences:
-        s = item["sequence"]
-        length = len(s)
-        total_length += length
-        counts.update(base for base in s if base in CANONICAL)
+    sequence_details = []
+    total_length = 0
+    sequence_count = 0
 
-        ambiguous = sum(base not in CANONICAL and base in IUPAC for base in s)
-        unsupported = sum(base not in IUPAC for base in s)
-        iupac_counts.update(base for base in s if base in IUPAC and base not in CANONICAL)
-        unsupported_counts.update(base for base in s if base not in IUPAC)
+    def finish_record(record):
+        nonlocal total_length, sequence_count
+
+        if record is None or record["length"] == 0:
+            return
+
+        sequence_count += 1
+        total_length += record["length"]
 
         sequence_details.append({
-            "id": item["id"],
-            "description": item["description"],
-            "length": length,
-            "file": item["file"],
-            "valid_bases": sum(base in CANONICAL for base in s),
-            "ambiguous_bases": ambiguous,
-            "unsupported_bases": unsupported,
-            "contains_ambiguous_bases": ambiguous > 0,
-            "contains_unsupported_symbols": unsupported > 0
+            "id": record["id"],
+            "description": record["description"],
+            "length": record["length"],
+            "file": record["file"],
+            "valid_bases": record["valid_bases"],
+            "ambiguous_bases": record["ambiguous_bases"],
+            "unsupported_bases": record["unsupported_bases"],
+            "contains_ambiguous_bases": record["ambiguous_bases"] > 0,
+            "contains_unsupported_symbols": record["unsupported_bases"] > 0
         })
+
+    for file_path in files:
+        record = None
+
+        try:
+            with open(file_path, "r", encoding="ascii", errors="replace") as fasta:
+                for line in fasta:
+                    line = line.strip()
+
+                    if not line:
+                        continue
+
+                    if line.startswith(">"):
+                        finish_record(record)
+
+                        description = line[1:].strip()
+                        identifier = description.split()[0] if description else ""
+
+                        record = {
+                            "id": identifier,
+                            "description": description,
+                            "file": Path(file_path).name,
+                            "length": 0,
+                            "valid_bases": 0,
+                            "ambiguous_bases": 0,
+                            "unsupported_bases": 0
+                        }
+                        continue
+
+                    if record is None:
+                        continue
+
+                    chunk = "".join(line.split()).upper()
+
+                    if not chunk:
+                        continue
+
+                    record["length"] += len(chunk)
+
+                    canonical = [base for base in chunk if base in CANONICAL]
+                    ambiguous = [base for base in chunk if base in IUPAC and base not in CANONICAL]
+                    unsupported = [base for base in chunk if base not in IUPAC]
+
+                    counts.update(canonical)
+                    iupac_counts.update(ambiguous)
+                    unsupported_counts.update(unsupported)
+
+                    record["valid_bases"] += len(canonical)
+                    record["ambiguous_bases"] += len(ambiguous)
+                    record["unsupported_bases"] += len(unsupported)
+
+            finish_record(record)
+
+        except Exception as error:
+            print(f"Could not read {file_path}: {error}")
 
     canonical_count = sum(counts.values())
     ambiguous_count = sum(iupac_counts.values())
     unsupported_count = sum(unsupported_counts.values())
+
     gc_count = counts["G"] + counts["C"]
     at_count = counts["A"] + counts["T"]
 
     gc = gc_count / canonical_count * 100 if canonical_count else 0
     at = at_count / canonical_count * 100 if canonical_count else 0
+
     lengths = [item["length"] for item in sequence_details]
 
     return {
-        "sequence_count": len(sequences),
+        "sequence_count": sequence_count,
         "genome_length": total_length,
         "base_counts": {base: counts[base] for base in "ATGC"},
         "gc_percentage": round(gc, 2),
@@ -81,13 +122,72 @@ def analyze_fasta_files(files):
         "structure": {
             "minimum_record_length": min(lengths) if lengths else 0,
             "maximum_record_length": max(lengths) if lengths else 0,
-            "average_record_length": round(statistics.mean(lengths), 2) if lengths else 0,
+            "average_record_length": round(sum(lengths) / len(lengths), 2) if lengths else 0,
             "record_lengths": lengths
         },
         "validation": {
-            "records_checked": len(sequences),
-            "records_with_ambiguous_bases": sum(d["ambiguous_bases"] > 0 for d in sequence_details),
-            "records_with_unsupported_symbols": sum(d["unsupported_bases"] > 0 for d in sequence_details),
-            "validation_status": "issues_found" if ambiguous_count or unsupported_count else "no_issues_detected"
+            "records_checked": sequence_count,
+            "records_with_ambiguous_bases": sum(
+                d["ambiguous_bases"] > 0 for d in sequence_details
+            ),
+            "records_with_unsupported_symbols": sum(
+                d["unsupported_bases"] > 0 for d in sequence_details
+            ),
+            "validation_status": (
+                "issues_found" if ambiguous_count or unsupported_count
+                else "no_issues_detected"
+            )
         }
     }
+
+
+import hashlib
+import json
+import os
+
+
+def analyze_fasta_files(files):
+    files = [Path(f) for f in files]
+
+    signatures = []
+    for file_path in sorted(files, key=lambda x: str(x)):
+        stat = file_path.stat()
+        signatures.append({
+            "path": str(file_path.resolve()),
+            "size": stat.st_size,
+            "modified": stat.st_mtime_ns
+        })
+
+    key = hashlib.sha256(
+        json.dumps(signatures, sort_keys=True).encode()
+    ).hexdigest()
+
+    cache_dir = Path(__file__).parent / "analysis_cache"
+    cache_file = cache_dir / f"{key}.json"
+
+    try:
+        if cache_file.exists():
+            with cache_file.open("r", encoding="utf-8") as f:
+                result = json.load(f)
+            print("CACHE HIT:", cache_file.name)
+            return result
+    except (OSError, ValueError):
+        pass
+
+    print("CACHE MISS: Running genome analysis...")
+    result = _analyze_fasta_files_uncached(files)
+
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        temporary_file = cache_file.with_suffix(".tmp")
+
+        with temporary_file.open("w", encoding="utf-8") as f:
+            json.dump(result, f, separators=(",", ":"))
+
+        os.replace(temporary_file, cache_file)
+        print("CACHE SAVED:", cache_file.name)
+
+    except (OSError, TypeError) as error:
+        print("Cache could not be saved:", error)
+
+    return result

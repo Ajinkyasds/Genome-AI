@@ -697,6 +697,12 @@ function initHeader() {
       searchGenome("Saccharomyces cerevisiae", { jumpToAnalysis: true });
     });
 
+    $("quickAIButton")?.addEventListener("click", () => {
+      go("ai-lab.html", {
+        organism: state.genome?.scientific_name || sessionStorage.getItem("genomeai_last_genome") || "Saccharomyces cerevisiae",
+        module: "summary"
+      });
+    });
     const runButton = $("runAnalysisButton");
     if (runButton) runButton.addEventListener("click", () => {
       const active = document.querySelector(".module[data-module].active");

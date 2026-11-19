@@ -3,3 +3,12 @@ __pycache__/
 *.pyc
 
 .env
+backend/analysis_cache/
+backend/genome_library1/
+drosophila_dataset.zip
+backend/*_before_scientific_upgrade.py
+frontend/*.backup
+genomeai-staged-backup.patch
+backend/*backup*
+backend/*_before_*.py
+frontend/*backup*

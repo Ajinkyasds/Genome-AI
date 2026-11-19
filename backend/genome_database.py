@@ -61,6 +61,21 @@ GENOME_DATABASE = {
         ],
         "summary": "A classic insect model used in genetics, development and comparative biology."
     },
+    "homo sapiens": {
+        "scientific_name": "Homo sapiens",
+        "common_name": "Human",
+        "group": "Animal",
+        "folder": "homo_sapiens",
+        "reference_assembly": "GCF_000001405.40",
+        "source": "NCBI RefSeq",
+        "taxonomy": [
+            ("Domain", "Eukaryota"), ("Kingdom", "Animalia"),
+            ("Phylum", "Chordata"), ("Class", "Mammalia"),
+            ("Order", "Primates"), ("Family", "Hominidae"),
+            ("Genus", "Homo"), ("Species", "Homo sapiens")
+        ],
+        "summary": "The human reference genome assembly GRCh38.p14, used in genetics and comparative genomics research."
+    },
     "amoeba proteus": {
         "scientific_name": "Amoeba proteus",
         "common_name": "Amoeba",
