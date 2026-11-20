@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -60,6 +60,242 @@
 
     </style>
 
+<style>
+/* ======================================
+   GENOME EXPLORATION HUB
+====================================== */
+
+.exploration-hub {
+    position: relative;
+    overflow: hidden;
+    padding: 100px 0;
+    background:
+        radial-gradient(ellipse at 15% 20%, rgba(40,180,200,.09), transparent 40%),
+        radial-gradient(ellipse at 85% 80%, rgba(112,90,255,.10), transparent 40%);
+}
+
+.exploration-hub .hub-heading {
+    margin-bottom: 42px;
+}
+
+.hub-eyebrow {
+    color: #55e6d0;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.hub-heading h2 {
+    font-size: clamp(32px, 5vw, 55px);
+    line-height: 1.1;
+    margin: 14px 0;
+    color: #f1f7ff;
+}
+
+.hub-heading h2 span {
+    background: linear-gradient(100deg, #55e6d0, #638cff, #a47bff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hub-description {
+    max-width: 620px;
+    color: #9baabd;
+    line-height: 1.8;
+}
+
+.hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.hub-card {
+    --hub-accent: #55e6d0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 310px;
+    padding: 26px;
+    overflow: hidden;
+    text-decoration: none;
+    color: #f4f8ff;
+    border: 1px solid rgba(150,180,220,.16);
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(20,36,55,.94), rgba(10,17,31,.97));
+    transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+
+.hub-card--quantum { --hub-accent: #a47bff; }
+.hub-card--sequencing { --hub-accent: #638cff; }
+.hub-card--voice { --hub-accent: #ff9b70; }
+
+.hub-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--hub-accent);
+    box-shadow: 0 18px 55px rgba(0,0,0,.32),
+                0 0 28px color-mix(in srgb, var(--hub-accent) 15%, transparent);
+}
+
+.hub-card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.hub-card__number {
+    color: var(--hub-accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.hub-card__arrow {
+    width: 35px;
+    height: 35px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,.07);
+    transition: transform .3s ease;
+}
+
+.hub-card:hover .hub-card__arrow {
+    transform: translate(4px, -4px);
+}
+
+.hub-card__visual {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    display: grid;
+    place-items: center;
+    margin: 23px auto;
+}
+
+.hub-visual__ring {
+    position: absolute;
+    inset: 5px;
+    border: 1px solid var(--hub-accent);
+    border-radius: 50%;
+    opacity: .55;
+    animation: hubRotate 12s linear infinite;
+}
+
+.hub-visual__ring::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 1px dashed var(--hub-accent);
+    border-radius: 50%;
+}
+
+.hub-visual__symbol {
+    font-size: 43px;
+    filter: drop-shadow(0 0 15px var(--hub-accent));
+    z-index: 1;
+}
+
+.hub-card--sequencing .hub-visual__ring {
+    border-radius: 35%;
+    transform: rotate(45deg);
+}
+
+.hub-card--voice .hub-visual__symbol {
+    animation: hubPulse 2s ease-in-out infinite;
+}
+
+.hub-card__title {
+    font-size: 23px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.hub-card__description {
+    color: #9baabd;
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 390px;
+}
+
+.hub-card__action {
+    margin-top: auto;
+    padding-top: 20px;
+    color: var(--hub-accent);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.hub-card--cell {
+    background: radial-gradient(circle at 80% 35%, rgba(85,230,208,.12), transparent 40%),
+                linear-gradient(145deg, #142a36, #0b1321);
+}
+
+.hub-card--quantum {
+    background: radial-gradient(circle at 80% 35%, rgba(164,123,255,.15), transparent 40%),
+                linear-gradient(145deg, #241c3b, #0d1324);
+}
+
+.hub-card--sequencing {
+    background: radial-gradient(circle at 80% 35%, rgba(99,140,255,.15), transparent 40%),
+                linear-gradient(145deg, #172844, #0b1321);
+}
+
+.hub-card--voice {
+    background: radial-gradient(circle at 80% 35%, rgba(255,155,112,.13), transparent 40%),
+                linear-gradient(145deg, #352329, #0d1321);
+}
+
+.nav-labs {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #55e6d0 !important;
+    font-weight: 800 !important;
+    text-decoration: none;
+    transition: opacity .2s ease;
+}
+
+.nav-labs:hover {
+    opacity: .75;
+}
+
+@keyframes hubRotate {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes hubPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+}
+
+@media (max-width: 700px) {
+    .hub-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exploration-hub {
+        padding: 65px 0;
+    }
+
+    .hub-card {
+        min-height: 290px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hub-card,
+    .hub-visual__ring,
+    .hub-card--voice .hub-visual__symbol {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+</style>
 </head>
 
 
@@ -147,7 +383,11 @@
                     Data
                 </a>
 
-            </nav>
+                        <a class="nav-labs" href="#exploration-hub">
+                Explore Labs ↗
+            </a>
+
+</nav>
 
 
             <!-- Header controls -->
@@ -832,7 +1072,116 @@
         </section>
 
 
-    </main>
+    <section class="exploration-hub" id="exploration-hub">
+    <div class="container">
+
+        <div class="hub-heading">
+            <p class="hub-eyebrow">GENOMEAI / SPECIAL EXPERIENCES</p>
+
+            <h2>
+                Enter the <span>Genome Frontier.</span>
+            </h2>
+
+            <p class="hub-description">
+                Explore interactive scientific environments, discover
+                genomic processes and experience a new dimension of
+                biological intelligence.
+            </p>
+        </div>
+
+        <div class="hub-grid">
+
+            <a class="hub-card hub-card--cell" href="cell-invasion.html">
+                <div class="hub-card__top">
+                    <span class="hub-card__number">01 / CELL BIOLOGY</span>
+                    <span class="hub-card__arrow">↗</span>
+                </div>
+
+                <div class="hub-card__visual">
+                    <span class="hub-visual__ring"></span>
+                    <span class="hub-visual__symbol">🧬</span>
+                </div>
+
+                <div class="hub-card__title">Cell Invasion 3D</div>
+
+                <p class="hub-card__description">
+                    Explore cellular structures and biological
+                    interactions through an immersive 3D experience.
+                </p>
+
+                <span class="hub-card__action">ENTER EXPERIENCE →</span>
+            </a>
+
+
+            <a class="hub-card hub-card--quantum" href="genome-quantum-chamber.html">
+                <div class="hub-card__top">
+                    <span class="hub-card__number">02 / QUANTUM SCIENCE</span>
+                    <span class="hub-card__arrow">↗</span>
+                </div>
+
+                <div class="hub-card__visual">
+                    <span class="hub-visual__ring"></span>
+                    <span class="hub-visual__symbol">⚛️</span>
+                </div>
+
+                <div class="hub-card__title">Quantum Genome Chamber</div>
+
+                <p class="hub-card__description">
+                    Explore quantum concepts and their scientific
+                    connections with molecular biology.
+                </p>
+
+                <span class="hub-card__action">ENTER CHAMBER →</span>
+            </a>
+
+
+            <a class="hub-card hub-card--sequencing" href="genome-sequencing-lab.html">
+                <div class="hub-card__top">
+                    <span class="hub-card__number">03 / GENOME TECHNOLOGY</span>
+                    <span class="hub-card__arrow">↗</span>
+                </div>
+
+                <div class="hub-card__visual">
+                    <span class="hub-visual__ring"></span>
+                    <span class="hub-visual__symbol">🔬</span>
+                </div>
+
+                <div class="hub-card__title">Genome Sequencing Lab</div>
+
+                <p class="hub-card__description">
+                    Explore how genetic information is read,
+                    analysed and assembled into genome sequences.
+                </p>
+
+                <span class="hub-card__action">ENTER LAB →</span>
+            </a>
+
+
+            <a class="hub-card hub-card--voice" href="voice-assistant.html">
+                <div class="hub-card__top">
+                    <span class="hub-card__number">04 / CONVERSATIONAL AI</span>
+                    <span class="hub-card__arrow">↗</span>
+                </div>
+
+                <div class="hub-card__visual">
+                    <span class="hub-visual__ring"></span>
+                    <span class="hub-visual__symbol">🎙️</span>
+                </div>
+
+                <div class="hub-card__title">GenomeAI Voice Assistant</div>
+
+                <p class="hub-card__description">
+                    Interact with your scientific AI assistant
+                    through a voice-enabled experience.
+                </p>
+
+                <span class="hub-card__action">START TALKING →</span>
+            </a>
+
+        </div>
+    </div>
+</section>
+</main>
 
 
     <!-- =========================
