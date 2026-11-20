@@ -312,11 +312,22 @@ def generate_voice(request: VoiceRequest):
         return Response(content=result.content, media_type="audio/wav")
 
     except httpx.HTTPStatusError as error:
+        response = error.response
+
+        print(
+            f"GROQ TTS ERROR: HTTP {response.status_code} | "
+            f"DETAIL: {response.text[:1200]} | "
+            f"REQUEST ID: {response.headers.get('x-request-id', 'n/a')}"
+        )
+
         raise HTTPException(
             status_code=502,
             detail="AI voice generation failed."
         )
-    except httpx.RequestError:
+
+    except httpx.RequestError as error:
+        print(f"GROQ TTS CONNECTION ERROR: {repr(error)}")
+
         raise HTTPException(
             status_code=502,
             detail="Could not connect to AI voice service."
