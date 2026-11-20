@@ -301,8 +301,9 @@ def generate_voice(request: VoiceRequest):
             },
             json={
                 "model": "canopylabs/orpheus-v1-english",
-                "voice": "daniel",
+                "voice": os.getenv("GROQ_TTS_VOICE", "hannah"),
                 "input": request.text,
+                "speed": 0.96,
                 "response_format": "wav"
             },
             timeout=60.0
