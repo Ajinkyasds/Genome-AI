@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <meta name="theme-color" content="#020b13">
+
+    <title>GenomeAI - Genome Intelligence Lab</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="lab.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- Ambient background -->
+
+    <div class="ambient a"></div>
+
+    <div class="ambient b"></div>
+
+    <div class="ambient c"></div>
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="header-inner">
+
+            <a class="brand" href="index.html">
+
+                <span class="brand-mark">⌬</span>
+
+                <span class="brand-text">
+
+                    <strong>
+                        GENOME<span>AI</span>
+                    </strong>
+
+                    <small>
+                        GENOMIC INTELLIGENCE
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <nav class="nav">
+
+                <a href="help.html">
+                    Help
+                </a>
+
+                <a href="about.html">
+                    About
+                </a>
+
+                <a href="organisms.html">
+                    Organisms
+                </a>
+
+                <a href="lab.html">
+                    Intelligence Lab
+                </a>
+
+                <a href="library.html">
+                    Library
+                </a>
+
+                <a href="data.html">
+                    Data
+                </a>
+
+            </nav>
+
+
+            <div class="header-tools">
+
+                <div class="system-status">
+
+                    <span class="status-led"></span>
+
+                    <span id="systemStatusText">
+                        SYSTEM ONLINE
+                    </span>
+
+                </div>
+
+
+                <button
+                    class="menu-btn"
+                    id="menuButton"
+                    type="button"
+                >
+                    ☰
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- MOBILE NAVIGATION DRAWER -->
+
+    <div
+        class="drawer hidden"
+        id="mobileDrawer"
+    >
+
+        <a href="help.html">
+            Help
+        </a>
+
+        <a href="about.html">
+            About
+        </a>
+
+        <a href="organisms.html">
+            Organisms
+        </a>
+
+        <a href="lab.html">
+            Intelligence Lab
+        </a>
+
+        <a href="library.html">
+            Library
+        </a>
+
+        <a href="data.html">
+            Data
+        </a>
+
+    </div>
+
+
+    <!-- MAIN -->
+
+    <main class="page">
+
+
+        <section class="section" id="lab">
+
+
+            <div class="section-head compact">
+
+                <div>
+
+                    <div class="kicker">
+                        GENOME INTELLIGENCE LAB
+                    </div>
+
+                    <h2>
+                        See the composition of
+                        <br>
+                        <span>
+                            a reference genome.
+                        </span>
+                    </h2>
+
+                </div>
+
+                <p class="lab-note">
+
+                    Every number on this page is a real measurement from the
+                    GenomeAI analysis engine. Organisms without a local
+                    reference sequence show a profile view only.
+
+                </p>
+
+            </div>
+
+
+            <!-- MODE SWITCH -->
+
+            <div
+                class="lab-mode-switch"
+                role="tablist"
+                aria-label="Lab mode"
+            >
+
+                <button
+                    class="lab-mode active"
+                    id="modeSingle"
+                    type="button"
+                    role="tab"
+                    aria-selected="true"
+                >
+                    ◈ SINGLE GENOME
+                </button>
+
+                <button
+                    class="lab-mode"
+                    id="modeCompare"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                >
+                    ⇄ COMPARE TWO
+                </button>
+
+            </div>
+
+
+            <!-- ============= SINGLE MODE ============= -->
+
+            <div id="singleView">
+
+
+                <div class="lab-selector" role="group" aria-label="Choose an organism">
+
+                    <button
+                        class="lab-org-btn"
+                        type="button"
+                        data-organism="Homo sapiens"
+                    >
+                        Human
+                    </button>
+
+                    <button
+                        class="lab-org-btn"
+                        type="button"
+                        data-organism="Saccharomyces cerevisiae"
+                    >
+                        Yeast
+                    </button>
+
+                    <button
+                        class="lab-org-btn"
+                        type="button"
+                        data-organism="Escherichia coli"
+                    >
+                        E. coli
+                    </button>
+
+                    <button
+                        class="lab-org-btn"
+                        type="button"
+                        data-organism="Arabidopsis thaliana"
+                    >
+                        Arabidopsis
+                    </button>
+
+                    <button
+                        class="lab-org-btn"
+                        type="button"
+                        data-organism="Drosophila melanogaster"
+                    >
+                        Fruit fly
+                    </button>
+
+                    <button
+                        class="lab-org-btn profile"
+                        type="button"
+                        data-organism="Amoeba proteus"
+                    >
+                        Amoeba · profile only
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="lab-loading hidden"
+                    id="labLoading"
+                >
+
+                    <div class="lab-spinner"></div>
+
+                    <span>
+                        RUNNING ANALYSIS...
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="lab-error hidden"
+                    id="labError"
+                    role="alert"
+                >
+
+                    <strong>
+                        Analysis unavailable.
+                    </strong>
+
+                    <p id="labErrorText">
+                        Something went wrong.
+                    </p>
+
+                </div>
+
+
+                <!-- PROFILE-ONLY (no FASTA) -->
+
+                <div
+                    class="lab-profile hidden"
+                    id="labProfile"
+                >
+
+                    <div class="lab-profile-icon">
+                        ⌬
+                    </div>
+
+                    <h3 id="profileName">
+                        -
+                    </h3>
+
+                    <p id="profileText">
+                        -
+                    </p>
+
+                    <span class="lab-tag">
+                        PROFILE ONLY · NO LOCAL REFERENCE SEQUENCE · MEASUREMENTS UNAVAILABLE
+                    </span>
+
+                </div>
+
+
+                <!-- FINGERPRINT VIEW -->
+
+                <div
+                    class="lab-content hidden"
+                    id="labContent"
+                >
+
+
+                    <div class="lab-top-row">
+
+
+                        <!-- RADIAL FINGERPRINT -->
+
+                        <article class="lab-panel fingerprint-panel">
+
+                            <div class="panel-head">
+
+                                <div>
+
+                                    <small>
+                                        GENOME FINGERPRINT
+                                    </small>
+
+                                    <h3 id="fingerprintName">
+                                        -
+                                    </h3>
+
+                                </div>
+
+                                <span class="info" tabindex="0"
+                                      aria-label="Base composition of canonical A, T, G and C bases only, as measured from the reference sequence.">
+                                    ?
+                                </span>
+
+                            </div>
+
+
+                            <div class="fingerprint-wrap">
+
+                                <svg
+                                    class="fingerprint-ring"
+                                    viewBox="0 0 220 220"
+                                    role="img"
+                                    aria-label="Radial chart of A, T, G and C base composition"
+                                >
+
+                                    <circle
+                                        class="ring-track"
+                                        cx="110"
+                                        cy="110"
+                                        r="80"
+                                    ></circle>
+
+                                    <circle
+                                        class="ring-seg segA"
+                                        id="ringA"
+                                        cx="110"
+                                        cy="110"
+                                        r="80"
+                                    ></circle>
+
+                                    <circle
+                                        class="ring-seg segT"
+                                        id="ringT"
+                                        cx="110"
+                                        cy="110"
+                                        r="80"
+                                    ></circle>
+
+                                    <circle
+                                        class="ring-seg segG"
+                                        id="ringG"
+                                        cx="110"
+                                        cy="110"
+                                        r="80"
+                                    ></circle>
+
+                                    <circle
+                                        class="ring-seg segC"
+                                        id="ringC"
+                                        cx="110"
+                                        cy="110"
+                                        r="80"
+                                    ></circle>
+
+                                </svg>
+
+
+                                <div class="fingerprint-center">
+
+                                    <small>
+                                        GC CONTENT
+                                    </small>
+
+                                    <strong id="fingerprintGC">
+                                        -
+                                    </strong>
+
+                                    <span id="fingerprintCommon">
+                                        -
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="fingerprint-legend">
+
+                                <span>
+                                    <i class="dotA"></i> A · <b id="pctA">-</b>
+                                </span>
+
+                                <span>
+                                    <i class="dotT"></i> T · <b id="pctT">-</b>
+                                </span>
+
+                                <span>
+                                    <i class="dotG"></i> G · <b id="pctG">-</b>
+                                </span>
+
+                                <span>
+                                    <i class="dotC"></i> C · <b id="pctC">-</b>
+                                </span>
+
+                            </div>
+
+                        </article>
+
+
+                        <!-- KEY STATS -->
+
+                        <article class="lab-panel stats-panel">
+
+                            <div class="panel-head">
+
+                                <div>
+
+                                    <small>
+                                        MEASURED METRICS
+                                    </small>
+
+                                    <h3>
+                                        Reference statistics
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="lab-stats">
+
+                                <div class="lab-stat">
+
+                                    <small>
+                                        TOTAL BASE PAIRS
+                                        <span class="info" tabindex="0"
+                                              aria-label="Total length of the reference sequence records, in base pairs.">?</span>
+                                    </small>
+
+                                    <strong id="labLength">
+                                        -
+                                    </strong>
+
+                                </div>
+
+                                <div class="lab-stat">
+
+                                    <small>
+                                        GC CONTENT
+                                        <span class="info" tabindex="0"
+                                              aria-label="Percentage of G and C bases among canonical bases.">?</span>
+                                    </small>
+
+                                    <strong id="labGC">
+                                        -
+                                    </strong>
+
+                                </div>
+
+                                <div class="lab-stat">
+
+                                    <small>
+                                        SEQUENCES
+                                        <span class="info" tabindex="0"
+                                              aria-label="Number of sequence records in the reference file.">?</span>
+                                    </small>
+
+                                    <strong id="labSeqs">
+                                        -
+                                    </strong>
+
+                                </div>
+
+                                <div class="lab-stat">
+
+                                    <small>
+                                        GC : AT RATIO
+                                        <span class="info" tabindex="0"
+                                              aria-label="Ratio of G plus C bases to A plus T bases.">?</span>
+                                    </small>
+
+                                    <strong id="labRatio">
+                                        -
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- BASE BARS -->
+
+                            <div class="lab-bars">
+
+                                <div class="lab-bar-row">
+
+                                    <span class="lab-letter lA">A</span>
+
+                                    <div class="lab-bar-track">
+                                        <i id="labBarA"></i>
+                                    </div>
+
+                                    <b id="labCountA">-</b>
+
+                                </div>
+
+                                <div class="lab-bar-row">
+
+                                    <span class="lab-letter lT">T</span>
+
+                                    <div class="lab-bar-track">
+                                        <i id="labBarT"></i>
+                                    </div>
+
+                                    <b id="labCountT">-</b>
+
+                                </div>
+
+                                <div class="lab-bar-row">
+
+                                    <span class="lab-letter lG">G</span>
+
+                                    <div class="lab-bar-track">
+                                        <i id="labBarG"></i>
+                                    </div>
+
+                                    <b id="labCountG">-</b>
+
+                                </div>
+
+                                <div class="lab-bar-row">
+
+                                    <span class="lab-letter lC">C</span>
+
+                                    <div class="lab-bar-track">
+                                        <i id="labBarC"></i>
+                                    </div>
+
+                                    <b id="labCountC">-</b>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="lab-meta">
+
+                                <div>
+
+                                    <small>
+                                        ASSEMBLY
+                                    </small>
+
+                                    <span id="labAssembly">
+                                        -
+                                    </span>
+
+                                </div>
+
+                                <div>
+
+                                    <small>
+                                        SOURCE
+                                    </small>
+
+                                    <span id="labSource">
+                                        -
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </article>
+
+                    </div>
+
+
+                    <!-- GC WINDOW PLOT -->
+
+                    <article class="lab-panel gc-plot-panel">
+
+                        <div class="panel-head">
+
+                            <div>
+
+                                <small>
+                                    GC CONTENT ACROSS POSITION
+                                </small>
+
+                                <h3>
+                                    Per-window GC plot
+                                </h3>
+
+                            </div>
+
+                            <span class="info" tabindex="0"
+                                  aria-label="This plot needs per-window GC data, which the current analysis engine does not compute.">?</span>
+
+                        </div>
+
+                        <div class="gc-unavailable">
+
+                            <strong>
+                                Not available.
+                            </strong>
+
+                            <p>
+                                The current analysis engine returns whole-genome GC content only.
+                                It does not compute per-window GC fractions, so no positional
+                                plot can be drawn for this organism.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ============= COMPARE MODE ============= -->
+
+            <div
+                class="hidden"
+                id="compareView"
+            >
+
+
+                <div class="lab-compare-selects">
+
+                    <label>
+
+                        <small>
+                            ORGANISM A
+                        </small>
+
+                        <select
+                            id="compareA"
+                            aria-label="First organism to compare"
+                        >
+
+                            <option value="">
+                                Select organism A...
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                    <span class="compare-vs">
+                        VS
+                    </span>
+
+                    <label>
+
+                        <small>
+                            ORGANISM B
+                        </small>
+
+                        <select
+                            id="compareB"
+                            aria-label="Second organism to compare"
+                        >
+
+                            <option value="">
+                                Select organism B...
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+
+                <div
+                    class="lab-loading hidden"
+                    id="compareLoading"
+                >
+
+                    <div class="lab-spinner"></div>
+
+                    <span>
+                        ANALYZING BOTH GENOMES...
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="lab-error hidden"
+                    id="compareError"
+                    role="alert"
+                >
+
+                    <strong>
+                        Comparison unavailable.
+                    </strong>
+
+                    <p id="compareErrorText">
+                        Something went wrong.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="lab-compare-result hidden"
+                    id="compareResult"
+                >
+
+
+                    <div class="lab-compare-charts">
+
+                        <article class="lab-panel compare-side">
+
+                            <div class="panel-head">
+
+                                <div>
+
+                                    <small>
+                                        ORGANISM A
+                                    </small>
+
+                                    <h3 id="cmpAName">
+                                        -
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                            <div
+                                class="mini-fingerprint"
+                                id="cmpAChart"
+                            >
+                            </div>
+
+                            <div class="compare-side-stats" id="cmpAStats">
+                            </div>
+
+                        </article>
+
+
+                        <article class="lab-panel compare-side">
+
+                            <div class="panel-head">
+
+                                <div>
+
+                                    <small>
+                                        ORGANISM B
+                                    </small>
+
+                                    <h3 id="cmpBName">
+                                        -
+                                    </h3>
+
+                                </div>
+
+                            </div>
+
+                            <div
+                                class="mini-fingerprint"
+                                id="cmpBChart"
+                            >
+                            </div>
+
+                            <div class="compare-side-stats" id="cmpBStats">
+                            </div>
+
+                        </article>
+
+                    </div>
+
+
+                    <article class="lab-panel">
+
+                        <div class="panel-head">
+
+                            <div>
+
+                                <small>
+                                    SIDE BY SIDE
+                                </small>
+
+                                <h3>
+                                    Measured comparison
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="lab-table-wrap">
+
+                            <table class="lab-table" id="compareTable">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Metric
+                                        </th>
+
+                                        <th id="cmpHeadA">
+                                            A
+                                        </th>
+
+                                        <th id="cmpHeadB">
+                                            B
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="compareTableBody">
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="lab-panel compare-summary-panel">
+
+                        <div class="panel-head">
+
+                            <div>
+
+                                <small>
+                                    FACTUAL SUMMARY
+                                </small>
+
+                                <h3>
+                                    What the numbers show
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+                        <p
+                            class="compare-summary"
+                            id="compareSummary"
+                        >
+                        </p>
+
+                        <small class="compare-disclaimer">
+
+                            This summary describes only the measured statistics above.
+                            It makes no claims about evolution, adaptation or fitness.
+
+                        </small>
+
+                    </article>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer class="site-footer">
+
+        <div
+            class="container"
+            style="display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:90px"
+        >
+
+
+            <div class="brand">
+
+                <span class="brand-mark">
+                    ⌬
+                </span>
+
+                <span class="brand-text">
+
+                    <strong>
+                        GENOME<span>AI</span>
+                    </strong>
+
+                    <small>
+                        EDUCATIONAL GENOMIC INTELLIGENCE
+                    </small>
+
+                </span>
+
+            </div>
+
+
+            <div
+                class="mono"
+                style="color:#516d79;font-size:7px"
+            >
+                REFERENCE DATA · COMPUTATIONAL BIOLOGY · AI-ASSISTED INTERPRETATION
+            </div>
+
+
+        </div>
+
+    </footer>
+
+
+    <!-- TOAST -->
+
+    <div
+        class="toast hidden"
+        id="toast"
+    >
+
+        <span>
+            ✓
+        </span>
+
+        <strong id="toastText">
+            Done
+        </strong>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+    <script src="lab.js"></script>
+
+</body>
+
+</html>
