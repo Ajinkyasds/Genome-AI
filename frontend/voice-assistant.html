@@ -36,6 +36,38 @@ button:hover{background:#10516a;box-shadow:0 0 16px #00cfff33}
 .visual.listening #orb{filter:drop-shadow(0 0 25px #00eaff)}
 .visual.speaking #orb{filter:drop-shadow(0 0 35px #a35cff)}
 @media(max-width:750px){.workspace{grid-template-columns:1fr}.visual,.chat{min-height:390px}#orb{height:230px}}
+.voice-picker {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid #183b55;
+}
+
+.voice-picker label {
+    color: #72eee5;
+    font-size: 10px;
+    letter-spacing: 2px;
+}
+
+.voice-picker select {
+    background: #102b42;
+    color: #e4fbff;
+    border: 1px solid #278b9b;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+}
+
+.voice-picker button {
+    padding: 12px 16px;
+}
+
+#voicePreviewStatus {
+    color: #7295ae;
+    font-size: 10px;
+}
 </style>
 </head>
 <body>
@@ -62,6 +94,22 @@ button:hover{background:#10516a;box-shadow:0 0 16px #00cfff33}
 
   <section class="chat">
    <h2>GENOMEAI CONVERSATION</h2>
+<div class="voice-picker">
+    <label for="voiceSelect">SELECT AI VOICE</label>
+
+    <select id="voiceSelect">
+        <option value="autumn">Autumn</option>
+        <option value="diana">Diana</option>
+        <option value="hannah" selected>Hannah</option>
+        <option value="austin">Austin</option>
+        <option value="daniel">Daniel</option>
+        <option value="troy">Troy</option>
+    </select>
+
+    <button type="button" id="previewVoice">▶ PREVIEW VOICE</button>
+
+    <span id="voicePreviewStatus">Choose your voice</span>
+</div>
    <div id="messages">
     <div class="message ai">Hello! I am GenomeAI. Ask me about DNA, genetics, genome sequencing, bioinformatics or any scientific topic.</div>
    </div>
@@ -571,23 +619,175 @@ fetch(API+"/health")
     const browserVoiceFallback = speak;
     let currentAudio = null;
     let voiceSession = 0;
+    const voiceSelect = document.getElementById("voiceSelect");
+    const previewButton = document.getElementById("previewVoice");
+    const previewStatus = document.getElementById("voicePreviewStatus");
 
-    function splitVoiceText(text, limit = 185) {
-        const chunks = [];
-        let current = "";
+    const voiceOptions = [
+        "autumn", "diana", "hannah",
+        "austin", "daniel", "troy"
+    ];
 
-        for (const word of text.split(/\s+/)) {
-            if ((current + " " + word).trim().length > limit && current) {
-                chunks.push(current);
-                current = word;
+    const savedVoice = localStorage.getItem("genomeai_voice");
+
+    if (voiceOptions.includes(savedVoice)) {
+        voiceSelect.value = savedVoice;
+    }
+
+    function selectedVoice() {
+        return voiceOptions.includes(voiceSelect.value)
+            ? voiceSelect.value
+            : "hannah";
+    }
+
+    voiceSelect.addEventListener("change", () => {
+        localStorage.setItem("genomeai_voice", selectedVoice());
+    });
+
+    previewButton.addEventListener("click", async () => {
+        const voice = selectedVoice();
+        let audioUrl = null;
+        let previewAudio = null;
+
+        voiceSession++;
+
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+
+        previewButton.disabled = true;
+        previewStatus.textContent = "Generating voice preview...";
+
+        try {
+            const response = await fetch(
+                API.replace(/\/$/, "") + "/voice",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        text: "Hello! I am GenomeAI. Let's explore the fascinating science of genetics and the human genome together.",
+                        voice: voice
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Voice API error: " + response.status);
+            }
+
+            audioUrl = URL.createObjectURL(await response.blob());
+
+            previewAudio = new Audio(audioUrl);
+            currentAudio = previewAudio;
+
+            previewStatus.textContent = "Playing " + voice + "...";
+
+            await new Promise((resolve, reject) => {
+                previewAudio.addEventListener("ended", resolve, {once:true});
+                previewAudio.addEventListener("pause", resolve, {once:true});
+                previewAudio.addEventListener("error", reject, {once:true});
+
+                previewAudio.play().catch(reject);
+            });
+
+            previewStatus.textContent = "Preview complete: " + voice;
+
+        } catch (error) {
+            previewStatus.textContent = "Preview failed: " + error.message;
+            console.error("Voice preview:", error);
+
+        } finally {
+            if (currentAudio === previewAudio) {
+                currentAudio = null;
+            }
+
+            if (audioUrl) {
+                URL.revokeObjectURL(audioUrl);
+            }
+
+            previewButton.disabled = false;
+        }
+    });
+
+
+    function splitVoiceText(text, limit = 190) {
+    const normalized = String(text || "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    if (!normalized) return [];
+
+    let sentences;
+
+    if (typeof Intl.Segmenter === "function") {
+        const segmenter = new Intl.Segmenter("en", {
+            granularity: "sentence"
+        });
+
+        sentences = Array.from(
+            segmenter.segment(normalized),
+            item => item.segment.trim()
+        );
+    } else {
+        sentences = normalized.match(
+            /[^.!?]+[.!?]+["'”’)\]]*|[^.!?]+$/g
+        ) || [normalized];
+    }
+
+    const chunks = [];
+    let current = "";
+
+    function flush() {
+        if (current) {
+            chunks.push(current.trim());
+            current = "";
+        }
+    }
+
+    function splitLongSentence(sentence) {
+        const words = sentence.split(/\s+/);
+        let part = "";
+
+        for (const word of words) {
+            if (!part) {
+                part = word;
+            } else if ((part + " " + word).length <= limit) {
+                part += " " + word;
             } else {
-                current = (current + " " + word).trim();
+                chunks.push(part);
+                part = word;
             }
         }
 
-        if (current) chunks.push(current);
-        return chunks;
+        if (part) chunks.push(part);
     }
+
+    for (const sentence of sentences) {
+        if (!sentence) continue;
+
+        if (sentence.length > limit) {
+            flush();
+            splitLongSentence(sentence);
+            continue;
+        }
+
+        if (!current) {
+            current = sentence;
+        } else if ((current + " " + sentence).length <= limit) {
+            current += " " + sentence;
+        } else {
+            flush();
+            current = sentence;
+        }
+    }
+
+    flush();
+    return chunks;
+}
 
     speak = async function(text) {
         const cleaned = cleanVoiceText(text);
@@ -600,7 +800,7 @@ fetch(API+"/health")
                 const response = await fetch(API.replace(/\/$/, "") + "/voice", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ text: chunk })
+                    body: JSON.stringify({ text: chunk, voice: selectedVoice() })
                 });
 
                 if (!response.ok) {

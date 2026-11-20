@@ -284,6 +284,7 @@ def chat(request: ChatRequest):
 
 class VoiceRequest(BaseModel):
     text: str = Field(min_length=1, max_length=200)
+    voice: Literal["autumn", "diana", "hannah", "austin", "daniel", "troy"] | None = None
 
 @app.post("/voice")
 def generate_voice(request: VoiceRequest):
@@ -301,7 +302,7 @@ def generate_voice(request: VoiceRequest):
             },
             json={
                 "model": "canopylabs/orpheus-v1-english",
-                "voice": os.getenv("GROQ_TTS_VOICE", "hannah"),
+                "voice": request.voice or os.getenv("GROQ_TTS_VOICE", "hannah"),
                 "input": request.text,
                 "speed": 0.96,
                 "response_format": "wav"
