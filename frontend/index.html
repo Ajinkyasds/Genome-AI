@@ -35,6 +35,29 @@
             text-decoration: none !important;
         }
 
+        /* GENOMEVERSE nav pill */
+        .nav .nav-genomeverse {
+            padding: 9px 14px;
+            border: 1px solid rgba(167,139,255,.45);
+            border-radius: 9px;
+            color: #c5b8ff;
+            background: rgba(167,139,255,.1);
+            font-weight: 700;
+            letter-spacing: .3px;
+            transition: .22s;
+            animation: gv-nav-pulse 3s ease-in-out infinite;
+        }
+        .nav .nav-genomeverse:hover {
+            color: #020912;
+            background: linear-gradient(135deg,#a78bff,#7ceef0);
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+        @keyframes gv-nav-pulse {
+            0%,100%{box-shadow:0 0 0 0 rgba(167,139,255,.3)}
+            50%{box-shadow:0 0 14px 4px rgba(167,139,255,.2)}
+        }
+
     </style>
 
 </head>
@@ -85,6 +108,11 @@
             <!-- Desktop navigation -->
 
             <nav class="nav">
+
+                <a class="nav-feature nav-genomeverse"
+                   href="genomeverse.html">
+                    🧬 GENOMEVERSE
+                </a>
 
                 <a class="nav-feature"
                    href="https://maroon-insurance-872951.framer.app/"
@@ -169,6 +197,10 @@
         class="drawer hidden"
         id="mobileDrawer"
     >
+
+        <a href="genomeverse.html" style="color:#c5b8ff!important;font-weight:700">
+            🧬 GENOMEVERSE
+        </a>
 
         <a href="help.html">
             Help
@@ -449,6 +481,67 @@
 
 
             </div>
+
+        </section>
+
+
+        <!-- =========================
+             GENOMEVERSE BANNER
+        ========================== -->
+
+        <section class="section" style="padding-top:0;padding-bottom:60px">
+
+            <a href="genomeverse.html" class="gv-banner-link" style="display:block;text-decoration:none">
+                <div style="
+                    display:grid;
+                    grid-template-columns:1fr auto;
+                    align-items:center;
+                    gap:24px;
+                    padding:28px 32px;
+                    border:1px solid rgba(167,139,255,.35);
+                    border-radius:22px;
+                    background:linear-gradient(135deg,rgba(167,139,255,.08),rgba(88,229,239,.05),rgba(98,227,168,.04));
+                    box-shadow:0 0 60px rgba(167,139,255,.08);
+                    transition:.28s;
+                    cursor:pointer;
+                " onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 20px 60px rgba(167,139,255,.14)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow='0 0 60px rgba(167,139,255,.08)'">
+                    <div>
+                        <div style="color:#a78bff;font:7px 'DM Mono',monospace;letter-spacing:2px;margin-bottom:10px">
+                            ✦ NEW EXPERIENCE
+                        </div>
+                        <h2 style="font:700 clamp(1.6rem,3.5vw,2.8rem)/1.1 'Space Grotesk',sans-serif;letter-spacing:-1.5px;margin:0">
+                            <span style="background:linear-gradient(105deg,#f0fdff,#a78bff 50%,#58e5ef);-webkit-background-clip:text;background-clip:text;color:transparent">
+                                GENOMEVERSE
+                            </span>
+                        </h2>
+                        <p style="max-width:540px;margin-top:10px;color:#8ba7b8;font-size:13px;line-height:1.75">
+                            Step inside a full-screen 3D DNA universe. Spin the double helix,
+                            discover A, T, G &amp; C, and explore the molecular code of life — built for
+                            this science exhibition.
+                        </p>
+                        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                            <span style="padding:5px 10px;border:1px solid rgba(88,229,239,.25);border-radius:7px;color:#8ba7b8;font:7px 'DM Mono',monospace">🧬 3D DNA HELIX</span>
+                            <span style="padding:5px 10px;border:1px solid rgba(167,139,255,.25);border-radius:7px;color:#8ba7b8;font:7px 'DM Mono',monospace">⚡ THREE.JS</span>
+                            <span style="padding:5px 10px;border:1px solid rgba(98,227,168,.25);border-radius:7px;color:#8ba7b8;font:7px 'DM Mono',monospace">🎓 EDUCATIONAL</span>
+                            <span style="padding:5px 10px;border:1px solid rgba(255,168,125,.25);border-radius:7px;color:#8ba7b8;font:7px 'DM Mono',monospace">🖱 INTERACTIVE</span>
+                        </div>
+                    </div>
+                    <div style="
+                        min-width:120px;text-align:center;
+                        padding:20px 24px;border:1px solid rgba(167,139,255,.3);border-radius:16px;
+                        background:rgba(167,139,255,.08);
+                    ">
+                        <div style="font-size:48px;line-height:1">🧬</div>
+                        <div style="
+                            margin-top:12px;padding:10px 16px;border-radius:10px;
+                            background:linear-gradient(135deg,#a78bff,#58e5ef);
+                            color:#020912;font:700 11px 'Space Grotesk',sans-serif;
+                            white-space:nowrap;
+                        ">ENTER →</div>
+                    </div>
+                </div>
+            </a>
 
         </section>
 

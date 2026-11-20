@@ -1,0 +1,1832 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#020912">
+  <title>GENOMEVERSE — The Journey into Life's Code · GenomeAI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==============================================================
+       DESIGN SYSTEM & CSS VARIABLES
+       Deep space navy, electric cyan, neon emerald, electric violet, neon coral
+    ============================================================== */
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#020912;
+      --bg-dark:#01050a;
+      --panel:rgba(7,25,42,.88);
+      --panel-border:rgba(88,229,239,.2);
+      --panel-glow:rgba(88,229,239,.1);
+      --cyan:#58e5ef;
+      --blue:#70a8ff;
+      --green:#62e3a8;
+      --purple:#a78bff;
+      --coral:#ffa87d;
+      --amber:#ffc850;
+      --text:#effcff;
+      --muted:#91aab9;
+      --dim:#557282;
+      --line:rgba(145,217,232,.14);
+      --radius:16px;
+      --shadow:0 24px 60px rgba(0,0,0,.55);
+    }
+
+    html{background:var(--bg);scroll-behavior:smooth}
+    body{
+      min-height:100vh;
+      color:var(--text);
+      font-family:"DM Sans",system-ui,sans-serif;
+      line-height:1.5;
+      overflow-x:hidden;
+      background:
+        radial-gradient(circle at 12% 10%,rgba(88,229,239,.12),transparent 35%),
+        radial-gradient(circle at 88% 12%,rgba(167,139,255,.14),transparent 38%),
+        radial-gradient(circle at 50% 90%,rgba(98,227,168,.08),transparent 45%),
+        linear-gradient(180deg,#020912 0%,#040f1d 50%,#01060e 100%);
+    }
+
+    /* Ambient blueprint grid */
+    body::before{
+      content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+      opacity:.14;
+      background-image:
+        linear-gradient(rgba(88,229,239,.05) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(88,229,239,.05) 1px,transparent 1px);
+      background-size:48px 48px;
+    }
+
+    /* Scanlines */
+    body::after{
+      content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+      background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px);
+    }
+
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit;cursor:pointer}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .hidden{display:none!important}
+    .mono{font-family:"DM Mono",monospace}
+    .space{font-family:"Space Grotesk",sans-serif}
+
+    /* ==============================================================
+       HEADER
+    ============================================================== */
+    .gv-header{
+      position:sticky;top:0;z-index:100;
+      height:64px;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 clamp(16px,3vw,36px);
+      border-bottom:1px solid var(--line);
+      background:rgba(2,9,18,.84);
+      backdrop-filter:blur(20px);
+    }
+    .gv-brand{display:flex;align-items:center;gap:12px}
+    .gv-brand-mark{
+      width:36px;height:36px;display:grid;place-items:center;
+      border:1px solid rgba(88,229,239,.35);border-radius:10px;
+      color:var(--cyan);font-size:18px;
+      background:linear-gradient(135deg,rgba(88,229,239,.15),rgba(167,139,255,.05));
+      box-shadow:0 0 20px rgba(88,229,239,.15);
+    }
+    .gv-brand-text strong{
+      display:block;font:700 16px/1 "Space Grotesk",sans-serif;letter-spacing:-.4px;
+    }
+    .gv-brand-text strong span{color:var(--cyan)}
+    .gv-brand-text small{
+      display:block;color:var(--dim);font:8px/1 "DM Mono",monospace;letter-spacing:1.5px;margin-top:3px;
+    }
+
+    .gv-nav-tools{display:flex;align-items:center;gap:10px}
+    .tool-btn{
+      height:36px;padding:0 12px;
+      display:inline-flex;align-items:center;gap:7px;
+      border:1px solid var(--line);border-radius:9px;
+      background:rgba(255,255,255,.03);color:var(--muted);
+      font-size:11px;transition:.2s;
+    }
+    .tool-btn:hover{color:var(--text);border-color:rgba(88,229,239,.35);background:rgba(88,229,239,.06)}
+    .tool-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(88,229,239,.1)}
+
+    /* ==============================================================
+       THREE-STAGE VISIBLE PROGRESS TRACKER
+    ============================================================== */
+    .mission-hud{
+      position:relative;z-index:10;
+      width:min(100%,1360px);margin:16px auto 0;
+      padding:0 clamp(16px,2vw,28px);
+    }
+    .hud-bar{
+      display:grid;grid-template-columns:auto 1fr auto;
+      align-items:center;gap:18px;
+      padding:14px 20px;border:1px solid var(--panel-border);
+      border-radius:18px;background:var(--panel);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(18px);
+    }
+    .hud-badge{
+      display:flex;align-items:center;gap:12px;
+    }
+    .badge-icon{
+      width:42px;height:42px;border-radius:12px;
+      display:grid;place-items:center;font-size:22px;
+      background:linear-gradient(135deg,rgba(88,229,239,.2),rgba(167,139,255,.2));
+      border:1px solid rgba(88,229,239,.35);
+    }
+    .badge-info small{display:block;color:var(--cyan);font:8px "DM Mono",monospace;letter-spacing:1.5px}
+    .badge-info strong{display:block;font:700 14px "Space Grotesk";color:#fff}
+
+    .three-stage-nav{
+      display:flex;align-items:center;justify-content:center;
+      gap:12px;overflow-x:auto;padding:2px 0;
+    }
+    .stage-pill{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 18px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.3);color:var(--muted);
+      font-size:12px;transition:.22s;white-space:nowrap;
+    }
+    .stage-pill:hover{
+      color:var(--text);border-color:rgba(88,229,239,.4);
+      background:rgba(88,229,239,.06);transform:translateY(-1px);
+    }
+    .stage-pill.active{
+      color:#020912;font-weight:700;
+      background:linear-gradient(135deg,#7ceef0,#8b7fff);
+      border-color:transparent;
+      box-shadow:0 0 24px rgba(88,229,239,.35);
+    }
+    .stage-pill.completed{
+      border-color:rgba(98,227,168,.4);
+      background:rgba(98,227,168,.12);color:var(--green);
+    }
+    .stage-num{
+      width:22px;height:22px;border-radius:50%;
+      display:grid;place-items:center;
+      font:700 10px "DM Mono",monospace;
+      background:rgba(255,255,255,.1);
+    }
+    .stage-pill.active .stage-num{background:#020912;color:var(--cyan)}
+
+    /* ==============================================================
+       MAIN WORKSPACE LAYOUT
+    ============================================================== */
+    .gv-workspace{
+      position:relative;z-index:10;
+      width:min(100%,1360px);margin:16px auto 30px;
+      padding:0 clamp(16px,2vw,28px);
+      display:grid;grid-template-columns:350px minmax(0,1fr) 350px;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    /* Left & Right Panels */
+    .panel{
+      display:flex;flex-direction:column;gap:14px;
+      padding:24px;border:1px solid var(--panel-border);
+      border-radius:var(--radius);background:var(--panel);
+      box-shadow:var(--shadow);backdrop-filter:blur(18px);
+    }
+    .panel-kicker{
+      color:var(--cyan);font:8px "DM Mono",monospace;
+      letter-spacing:2px;display:flex;align-items:center;gap:8px;
+    }
+    .panel-kicker::before{
+      content:"";width:6px;height:6px;border-radius:50%;
+      background:var(--cyan);box-shadow:0 0 10px var(--cyan);
+    }
+    .panel-title{
+      font:700 22px/1.15 "Space Grotesk",sans-serif;
+      letter-spacing:-.6px;
+      color:#fff;
+    }
+    .panel-p{
+      color:var(--muted);font-size:12px;line-height:1.75;
+    }
+    .analogy-box{
+      padding:14px 16px;border-radius:12px;
+      border:1px solid rgba(167,139,255,.25);
+      background:rgba(167,139,255,.05);
+    }
+    .analogy-kicker{color:var(--purple);font:8px "DM Mono",monospace;letter-spacing:1.2px;margin-bottom:5px}
+    .analogy-text{color:#d5caff;font-size:12px;line-height:1.65}
+
+    /* Game Stats Box */
+    .game-stats{
+      display:grid;grid-template-columns:1fr 1fr;gap:8px;
+      padding:12px;border-radius:12px;
+      border:1px solid var(--line);background:rgba(0,0,0,.25);
+    }
+    .stat-item small{display:block;color:var(--dim);font:8px "DM Mono",monospace;letter-spacing:1px}
+    .stat-item strong{display:block;font:700 18px "Space Grotesk";color:var(--cyan)}
+
+    /* Step Checklist */
+    .task-checklist{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+    .task-item{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:10px 12px;border-radius:10px;
+      border:1px solid rgba(255,255,255,.05);
+      background:rgba(0,0,0,.2);
+      font-size:11px;color:var(--muted);
+      transition:.2s;
+    }
+    .task-item.done{
+      border-color:rgba(98,227,168,.3);
+      background:rgba(98,227,168,.06);color:var(--green);
+    }
+    .task-check{
+      width:18px;height:18px;border-radius:50%;
+      border:1px solid var(--dim);
+      display:grid;place-items:center;font-size:9px;
+      flex-shrink:0;margin-top:1px;
+    }
+    .task-item.done .task-check{
+      border-color:var(--green);background:var(--green);color:#020912;font-weight:bold;
+    }
+
+    /* ==============================================================
+       CENTER STAGE & CANVAS
+    ============================================================== */
+    .stage-center{
+      position:relative;
+      display:flex;flex-direction:column;
+      border:1px solid var(--panel-border);
+      border-radius:var(--radius);background:rgba(2,8,16,.8);
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .canvas-wrap{
+      position:relative;width:100%;flex:1;
+      min-height:560px;display:grid;place-items:center;
+    }
+    #dnaCanvas{
+      width:100%;height:100%;display:block;
+      cursor:grab;
+    }
+    #dnaCanvas:active{cursor:grabbing}
+
+    /* Floating Canvas Overlay Controls */
+    .canvas-overlay-top{
+      position:absolute;top:16px;left:18px;right:18px;
+      display:flex;align-items:center;justify-content:space-between;
+      pointer-events:none;
+    }
+    .canvas-tag{
+      padding:6px 14px;border-radius:99px;
+      border:1px solid rgba(88,229,239,.3);
+      background:rgba(2,9,18,.85);backdrop-filter:blur(10px);
+      color:var(--cyan);font:700 9px "DM Mono",monospace;letter-spacing:1px;
+      display:flex;align-items:center;gap:7px;
+      pointer-events:auto;
+    }
+    .canvas-tag span{
+      width:6px;height:6px;border-radius:50%;
+      background:var(--cyan);box-shadow:0 0 10px var(--cyan);
+      animation:pulse-led 2s infinite;
+    }
+    @keyframes pulse-led{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .canvas-controls-bottom{
+      position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+      display:flex;align-items:center;gap:8px;
+      padding:8px 16px;border-radius:99px;
+      border:1px solid var(--panel-border);
+      background:rgba(2,9,18,.9);backdrop-filter:blur(14px);
+      box-shadow:0 10px 30px rgba(0,0,0,.65);
+      white-space:nowrap;
+    }
+    .c-btn{
+      height:32px;padding:0 12px;border-radius:99px;
+      border:1px solid var(--line);background:rgba(255,255,255,.04);
+      color:var(--muted);font-size:11px;
+      display:inline-flex;align-items:center;gap:6px;
+      transition:.2s;
+    }
+    .c-btn:hover{
+      color:var(--text);border-color:var(--cyan);background:rgba(88,229,239,.1);
+    }
+    .c-btn.primary{
+      background:linear-gradient(135deg,var(--cyan),var(--green));
+      color:#020912;font-weight:700;border:none;
+      box-shadow:0 0 20px rgba(88,229,239,.3);
+    }
+
+    /* In-canvas Game Prompt Toast */
+    .game-prompt{
+      position:absolute;top:62px;left:50%;transform:translateX(-50%);
+      padding:10px 22px;border-radius:99px;
+      border:1px solid rgba(167,139,255,.45);
+      background:rgba(10,20,38,.94);backdrop-filter:blur(14px);
+      box-shadow:0 10px 30px rgba(0,0,0,.6);
+      color:#fff;font-size:12px;font-weight:600;
+      display:flex;align-items:center;gap:10px;
+      pointer-events:none;transition:.3s;
+      z-index:20;text-align:center;max-width:90%;
+    }
+    .game-prompt.success{
+      border-color:var(--green);color:var(--green);background:rgba(4,30,20,.95);
+    }
+    .game-prompt.error{
+      border-color:var(--coral);color:var(--coral);background:rgba(30,10,12,.95);
+    }
+
+    /* ==============================================================
+       RIGHT PANEL: INTERACTIVE GAME / CONTROL DECK
+    ============================================================== */
+    .action-deck{
+      display:flex;flex-direction:column;gap:14px;
+    }
+
+    /* Base Puzzle Cards (for Experience 2) */
+    .puzzle-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    }
+    .puzzle-btn{
+      padding:14px 12px;border-radius:14px;
+      border:1px solid;text-align:left;
+      display:flex;flex-direction:column;gap:4px;
+      background:rgba(0,0,0,.35);transition:.22s;
+      user-select:none;
+    }
+    .puzzle-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.45)}
+    .puzzle-btn.base-A{color:var(--cyan);border-color:rgba(88,229,239,.4);background:rgba(88,229,239,.08)}
+    .puzzle-btn.base-T{color:var(--green);border-color:rgba(98,227,168,.4);background:rgba(98,227,168,.08)}
+    .puzzle-btn.base-G{color:var(--purple);border-color:rgba(167,139,255,.4);background:rgba(167,139,255,.08)}
+    .puzzle-btn.base-C{color:var(--coral);border-color:rgba(255,168,125,.4);background:rgba(255,168,125,.08)}
+    .puzzle-letter{font:700 26px/1 "Space Grotesk",sans-serif}
+    .puzzle-sub{font:8px "DM Mono",monospace;opacity:.85;letter-spacing:.8px}
+    .puzzle-bond{font:8px "DM Mono",monospace;color:var(--muted);margin-top:2px}
+
+    /* Range Slider */
+    .slider-group{
+      display:flex;flex-direction:column;gap:6px;
+      padding:14px;border-radius:12px;
+      border:1px solid var(--line);background:rgba(0,0,0,.25);
+    }
+    .slider-head{display:flex;justify-content:space-between;font-size:11px}
+    .slider-head small{color:var(--cyan);font-family:"DM Mono",monospace}
+    .slider-input{
+      -webkit-appearance:none;width:100%;height:6px;border-radius:99px;
+      background:rgba(255,255,255,.1);outline:none;
+    }
+    .slider-input::-webkit-slider-thumb{
+      -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+      background:var(--cyan);box-shadow:0 0 12px var(--cyan);cursor:pointer;
+    }
+
+    /* Action Buttons */
+    .act-btn{
+      width:100%;min-height:46px;padding:0 18px;
+      border-radius:12px;border:none;
+      font:700 12px "Space Grotesk",sans-serif;letter-spacing:.3px;
+      display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      transition:.24s;
+    }
+    .act-btn.primary{
+      background:linear-gradient(135deg,var(--cyan),var(--green));
+      color:#020912;
+      box-shadow:0 10px 25px rgba(88,229,239,.22);
+    }
+    .act-btn.primary:hover{transform:translateY(-2px);box-shadow:0 14px 35px rgba(88,229,239,.32)}
+    .act-btn.secondary{
+      border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);
+    }
+    .act-btn.secondary:hover{border-color:var(--cyan);background:rgba(88,229,239,.08)}
+
+    /* Achievement Modal */
+    .achievement-popup{
+      position:fixed;inset:0;z-index:300;
+      display:grid;place-items:center;padding:20px;
+    }
+    .popup-backdrop{
+      position:absolute;inset:0;
+      background:rgba(1,5,12,.82);backdrop-filter:blur(14px);
+    }
+    .popup-card{
+      position:relative;width:min(500px,100%);
+      padding:36px 30px;text-align:center;
+      border:1px solid rgba(88,229,239,.35);border-radius:24px;
+      background:linear-gradient(145deg,#071e30,#030c18);
+      box-shadow:0 40px 100px rgba(0,0,0,.7);
+      animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);
+    }
+    @keyframes popIn{
+      0%{transform:scale(.88) translateY(16px);opacity:0}
+      100%{transform:scale(1) translateY(0);opacity:1}
+    }
+    .popup-trophy{
+      width:76px;height:76px;margin:0 auto 16px;border-radius:50%;
+      display:grid;place-items:center;font-size:38px;
+      background:linear-gradient(135deg,rgba(88,229,239,.25),rgba(167,139,255,.25));
+      border:2px solid var(--cyan);box-shadow:0 0 35px rgba(88,229,239,.3);
+    }
+    .popup-card h2{font:700 26px "Space Grotesk";color:#fff}
+    .popup-card p{margin:10px 0 22px;color:var(--muted);font-size:12px;line-height:1.75}
+
+    /* ==============================================================
+       BOTTOM STRIP & BACK LINK
+    ============================================================== */
+    .gv-footer-cta{
+      width:min(100%,1360px);margin:20px auto 60px;
+      padding:0 clamp(16px,2vw,28px);
+      text-align:center;
+    }
+    .cta-enter-link{
+      display:inline-flex;align-items:center;gap:12px;
+      padding:16px 34px;border-radius:14px;
+      background:linear-gradient(135deg,rgba(167,139,255,.15),rgba(88,229,239,.15));
+      border:1px solid rgba(88,229,239,.3);
+      color:#fff;font:700 14px "Space Grotesk";transition:.25s;
+    }
+    .cta-enter-link:hover{
+      transform:translateY(-3px);border-color:var(--cyan);
+      box-shadow:0 15px 40px rgba(88,229,239,.2);
+    }
+
+    /* Responsive */
+    @media(max-width:1150px){
+      .gv-workspace{grid-template-columns:300px minmax(0,1fr) 300px}
+    }
+    @media(max-width:960px){
+      .hud-bar{grid-template-columns:1fr;gap:12px}
+      .gv-workspace{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+      .stage-center{order:-1;min-height:480px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<header class="gv-header">
+  <div class="gv-brand">
+    <div class="gv-brand-mark">⌬</div>
+    <div class="gv-brand-text">
+      <strong>GENOME<span>VERSE</span></strong>
+      <small>INTERACTIVE DNA ODYSSEY · SCHOOL SCIENCE EXHIBITION</small>
+    </div>
+  </div>
+
+  <div class="gv-nav-tools">
+    <button class="tool-btn" id="soundBtn" onclick="GV.toggleSound()" title="Toggle Sound FX">
+      <span id="soundIcon">🔊</span> <span id="soundText">SFX: ON</span>
+    </button>
+    <button class="tool-btn" onclick="GV.showGuide()">
+      <span>📖</span> <span>Guide</span>
+    </button>
+    <a class="tool-btn" href="index.html">
+      <span>←</span> Back to GenomeAI
+    </a>
+  </div>
+</header>
+
+<!-- ============================================================
+     THREE-STAGE VISIBLE PROGRESS TRACKER
+============================================================ -->
+<section class="mission-hud">
+  <div class="hud-bar">
+    <div class="hud-badge">
+      <div class="badge-icon" id="stageBadge">🧬</div>
+      <div class="badge-info">
+        <small id="stageKicker">EXPERIENCE 1 OF 3</small>
+        <strong id="stageName">DNA Formation</strong>
+      </div>
+    </div>
+
+    <!-- The 3 Core Experiences -->
+    <nav class="three-stage-nav" aria-label="GENOMEVERSE Experiences">
+      <button class="stage-pill active" id="pill-1" onclick="GV.setStage(1)">
+        <span class="stage-num">01</span>
+        <span>BUILD DNA</span>
+      </button>
+      <button class="stage-pill" id="pill-2" onclick="GV.setStage(2)">
+        <span class="stage-num">02</span>
+        <span>MATCH THE BASES</span>
+      </button>
+      <button class="stage-pill" id="pill-3" onclick="GV.setStage(3)">
+        <span class="stage-num">03</span>
+        <span>UNZIP DNA</span>
+      </button>
+    </nav>
+
+    <div>
+      <button class="tool-btn active" onclick="GV.replayCurrentStage()" title="Replay current animation">
+        <span>↺</span> Replay
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     MAIN 3-PANEL INTERACTIVE WORKSPACE
+============================================================ -->
+<main class="gv-workspace">
+
+  <!-- LEFT PANEL: Beginner-Friendly Scientific Context -->
+  <aside class="panel" id="leftInfoPanel">
+    <div class="panel-kicker" id="infoKicker">STAGE 01 · BUILD DNA</div>
+    <h2 class="panel-title" id="infoTitle">How Nature Builds DNA</h2>
+    <p class="panel-p" id="infoBody">
+      "DNA is like an instruction book used by living organisms. Its structure has two strands connected by matching chemical bases."
+    </p>
+
+    <!-- Friendly Everyday Analogy Box -->
+    <div class="analogy-box">
+      <div class="analogy-kicker">💡 EVERYDAY COMPARISON</div>
+      <div class="analogy-text" id="analogyText">
+        Think of DNA as a <strong>twisted spiral staircase</strong>. The outer handrails are sugar and phosphate,
+        and the steps in the middle are four matching chemical letters.
+      </div>
+    </div>
+
+    <!-- Game / Progress Stats for Experience 2 -->
+    <div class="game-stats hidden" id="gameStatsBox">
+      <div class="stat-item">
+        <small>SCORE</small>
+        <strong id="statScore">0 PTS</strong>
+      </div>
+      <div class="stat-item">
+        <small>MATCHED</small>
+        <strong id="statMatches">0 / 6</strong>
+      </div>
+    </div>
+
+    <!-- Step Checklist / Learning Goals -->
+    <div style="margin-top:auto">
+      <div style="color:var(--dim);font:8px 'DM Mono',monospace;letter-spacing:1px;margin-bottom:8px">
+        EXPERIENCE OBJECTIVES
+      </div>
+      <div class="task-checklist" id="taskChecklist">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- CENTER STAGE: 3D / Perspective Interactive Canvas -->
+  <section class="stage-center">
+    <div class="canvas-wrap">
+      <canvas id="dnaCanvas" width="900" height="600" aria-label="Interactive 3D DNA Simulation Canvas"></canvas>
+
+      <!-- Floating Top Labels -->
+      <div class="canvas-overlay-top">
+        <div class="canvas-tag">
+          <span></span>
+          <span id="canvasStatusText">SIMULATION ACTIVE · 60 FPS</span>
+        </div>
+        <div class="canvas-tag" style="border-color:rgba(167,139,255,.3);color:var(--purple)">
+          <span style="background:var(--purple);box-shadow:0 0 10px var(--purple)"></span>
+          <span id="canvasModeLabel">3D FORMATION SEQUENCE</span>
+        </div>
+      </div>
+
+      <!-- Floating In-Canvas Prompt Toast -->
+      <div class="game-prompt" id="gamePrompt">
+        <span>🎮</span> <span id="promptText">Press PLAY or use the Step controls to watch DNA form!</span>
+      </div>
+
+      <!-- Canvas Bottom Viewport Controls -->
+      <div class="canvas-controls-bottom">
+        <button class="c-btn" id="playPauseBtn" onclick="GV.togglePlayPause()">
+          <span id="playPauseIcon">⏸</span> <span id="playPauseText">Pause</span>
+        </button>
+        <button class="c-btn" onclick="GV.replayCurrentStage()">
+          <span>↺</span> Replay
+        </button>
+        <button class="c-btn" onclick="GV.resetCamera()">
+          <span>👁</span> Reset Angle
+        </button>
+        <button class="c-btn" id="slowMoBtn" onclick="GV.toggleSlowMo()">
+          <span>🐢</span> <span id="slowMoText">Slow-Mo: OFF</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT PANEL: Interactive Game / Controls Deck -->
+  <aside class="panel">
+    <div class="panel-kicker">INTERACTIVE CONTROLS</div>
+    <h3 class="panel-title" style="font-size:18px" id="controlsTitle">Formation Controls</h3>
+    <p class="panel-p" style="font-size:11px" id="controlsSubtitle">
+      Control the 5-phase assembly sequence.
+    </p>
+
+    <!-- Dynamic Action Deck for Active Experience -->
+    <div class="action-deck" id="actionDeck">
+      <!-- Injected based on active experience -->
+    </div>
+
+    <!-- Advance to Next Experience -->
+    <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--line)">
+      <button class="act-btn primary" id="nextStageBtn" onclick="GV.advanceStage()">
+        Next: Match the Bases →
+      </button>
+    </div>
+  </aside>
+
+</main>
+
+<!-- ============================================================
+     BOTTOM BANNER TO GENOMEAI SUITE
+============================================================ -->
+<div class="gv-footer-cta">
+  <a class="cta-enter-link" href="index.html#modes">
+    <span>🚀</span>
+    <span>Enter the Full GenomeAI Platform with Real Organisms (Yeast, E. coli, Human) →</span>
+  </a>
+</div>
+
+<!-- ============================================================
+     ACHIEVEMENT & COMPLETION MODAL
+============================================================ -->
+<div class="achievement-popup hidden" id="achieveModal">
+  <div class="popup-backdrop" onclick="GV.closeAchievement()"></div>
+  <div class="popup-card">
+    <div class="popup-trophy" id="trophyIcon">🏆</div>
+    <div style="color:var(--cyan);font:8px 'DM Mono',monospace;letter-spacing:2px;margin-bottom:6px" id="trophyKicker">STAGE COMPLETE!</div>
+    <h2 id="trophyTitle">DNA MATCHING COMPLETE!</h2>
+    <p id="trophyDesc">
+      Complementary base pairing helps DNA maintain its structure and is important during DNA replication, ensuring life can photocopy its instructions without mistakes!
+    </p>
+    <button class="act-btn primary" id="trophyActionBtn" onclick="GV.closeAchievementAndAdvance()">
+      Continue →
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCIENTIFIC GUIDE MODAL
+============================================================ -->
+<div class="achievement-popup hidden" id="guideModal">
+  <div class="popup-backdrop" onclick="GV.closeGuide()"></div>
+  <div class="popup-card" style="width:min(620px,100%);text-align:left">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="color:var(--cyan);font:8px 'DM Mono',monospace;letter-spacing:1.5px">EXHIBITION SCIENTIFIC GUIDE</div>
+      <button onclick="GV.closeGuide()" style="background:transparent;border:none;color:var(--muted);font-size:18px">✕</button>
+    </div>
+    <h2 style="font-size:22px;margin-bottom:10px">The 3 Big Ideas of DNA</h2>
+    <div style="color:var(--muted);font-size:12px;line-height:1.75;display:flex;flex-direction:column;gap:12px">
+      <p>• <strong>01 — Structure (Double Helix):</strong> DNA has two outer handrails made of sugar and phosphate, wound around each other in an antiparallel corkscrew.</p>
+      <p>• <strong>02 — The 4-Letter Code (Base Pairing):</strong> The steps inside are matching pairs: <strong>Adenine (A)</strong> always pairs with <strong>Thymine (T)</strong> via 2 hydrogen bonds; <strong>Guanine (G)</strong> always pairs with <strong>Cytosine (C)</strong> via 3 hydrogen bonds.</p>
+      <p>• <strong>03 — Separation (The Zipper):</strong> Hydrogen bonds act like a molecular zipper. They hold the strands securely, but when the cell needs to copy or read the manual, an enzyme called <em>Helicase</em> unzips them cleanly.</p>
+    </div>
+    <button class="act-btn secondary" style="margin-top:20px" onclick="GV.closeGuide()">
+      Close Guide
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================
+     INTERACTIVE 3D PERSPECTIVE CANVAS ENGINE
+     100% Self-Contained, Zero CDN Dependencies, Immune to ORB
+============================================================ -->
+<script>
+(function() {
+  "use strict";
+
+  /* ============================================================
+     AUDIO SYNTHESIZER (Web Audio API)
+  ============================================================ */
+  let audioCtx = null;
+  let soundEnabled = true;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  function playTone(freq, type, duration, gainLevel = 0.15) {
+    if (!soundEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || "sine";
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(gainLevel, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+  }
+
+  function soundSnap() {
+    // Magnetic snap harmonic chime
+    playTone(523.25, "sine", 0.18, 0.22); // C5
+    setTimeout(() => playTone(659.25, "sine", 0.24, 0.22), 60); // E5
+  }
+
+  function soundWrong() {
+    // Error wobble boop
+    playTone(220, "triangle", 0.24, 0.18);
+    setTimeout(() => playTone(196, "triangle", 0.24, 0.18), 100);
+  }
+
+  function soundZip() {
+    // Light molecular unzip click
+    playTone(800 + Math.random() * 400, "sawtooth", 0.035, 0.06);
+  }
+
+  function soundSuccess() {
+    // Celebratory arpeggio
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((f, idx) => {
+      setTimeout(() => playTone(f, "sine", 0.32, 0.22), idx * 80);
+    });
+  }
+
+  /* ============================================================
+     3 CORE EXPERIENCES DATA & PEDAGOGY
+  ============================================================ */
+  const STAGES = {
+    1: {
+      id: 1,
+      badge: "🧬",
+      kicker: "EXPERIENCE 1 OF 3",
+      name: "DNA Formation",
+      title: "How Nature Builds DNA",
+      body: "DNA is like an instruction book used by living organisms. Its structure has two strands connected by matching chemical bases. Watch the 5-step assembly sequence below!",
+      analogy: "Think of DNA as a <strong>twisted spiral staircase</strong>. The outer handrails are sugar and phosphate, and the steps in the middle are four matching chemical letters.",
+      tasks: [
+        { text: "1. Two separate molecular strands appear", id: "f1", done: false },
+        { text: "2. Four types of bases appear between them", id: "f2", done: false },
+        { text: "3. Matching bases move towards each other", id: "f3", done: false },
+        { text: "4. Chemical connections form", id: "f4", done: false },
+        { text: "5. Strands twist into a 3D double helix", id: "f5", done: false }
+      ],
+      modeLabel: "CINEMATIC 3D FORMATION",
+      prompt: "Click PLAY to watch the 5-step cinematic formation sequence!",
+      trophy: {
+        title: "Helix Formation Complete! 🏆",
+        desc: "You saw how two molecular strands attract matching bases and twist into a stable double helix to protect life's instructions!"
+      }
+    },
+    2: {
+      id: 2,
+      badge: "🧲",
+      kicker: "EXPERIENCE 2 OF 3",
+      name: "The Base Pairing Game",
+      title: "Match the Bases Challenge",
+      body: "Complementary base pairing is the rule of life: <strong>A matches T</strong>, and <strong>G matches C</strong>. Click or drag the correct partner to solve the missing bases on the strand!",
+      analogy: "Like a <strong>puzzle lock & key</strong>: Adenine (A) has 2 connection points and only fits Thymine (T). Guanine (G) has 3 connection points and only fits Cytosine (C).",
+      tasks: [
+        { text: "Match Adenine (A) ↔ Thymine (T)", id: "gA", done: false },
+        { text: "Match Guanine (G) ↔ Cytosine (C)", id: "gG", done: false },
+        { text: "Complete all 6 missing bases without errors", id: "gAll", done: false }
+      ],
+      modeLabel: "BASE PAIRING MINI-GAME",
+      prompt: "Select the matching base for the highlighted slot! (Hint: A↔T, G↔C)",
+      trophy: {
+        title: "DNA MATCHING COMPLETE!",
+        desc: "Complementary base pairing helps DNA maintain its structure and is important during DNA replication, ensuring every cell gets an exact copy of life's manual!"
+      }
+    },
+    3: {
+      id: 3,
+      badge: "⚡",
+      kicker: "EXPERIENCE 3 OF 3",
+      name: "The DNA Zipper",
+      title: "Strand Separation (Helicase)",
+      body: "DNA's two strands must separate so the cell can read or copy the code. Hydrogen bonds unzip cleanly like a zipper teeth, leaving both single strands intact as templates!",
+      analogy: "Like <strong>unzipping a jacket</strong>: the slider opens the teeth easily without cutting the fabric. Each separated strand can now serve as a template to build a new copy.",
+      tasks: [
+        { text: "1. View complete double helix with highlighted bonds", id: "z1", done: false },
+        { text: "2. Start unzipping action with Helicase enzyme", id: "z2", done: false },
+        { text: "3. Strands separate into template replication fork", id: "z3", done: false }
+      ],
+      modeLabel: "DNA ZIPPER SEPARATION",
+      prompt: "Click 'START UNZIPPING' to watch the molecular zipper separate the strands!",
+      trophy: {
+        title: "DNA Separation Complete! 🏆",
+        desc: "You unzipped the double helix! The separated strands now serve as templates during DNA replication."
+      }
+    }
+  };
+
+  /* ============================================================
+     GLOBAL STATE & SIMULATION PARAMETERS
+  ============================================================ */
+  const canvas = document.getElementById("dnaCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const state = {
+    currentStage: 1,
+    paused: false,
+    slowMo: false,
+    time: 0,
+    rotX: 0.12,
+    rotY: 0,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0,
+    isModalOpen: false,
+
+    // Experience 1: Formation Sequence
+    // Phase 1: Separate Strands (0-0.2)
+    // Phase 2: Bases appear (0.2-0.4)
+    // Phase 3: Bases move together (0.4-0.65)
+    // Phase 4: Connections form (0.65-0.8)
+    // Phase 5: Helix twists (0.8-1.0)
+    formationProgress: 0.0,
+    formationAutoPlay: true,
+    formationSpeed: 0.003,
+
+    // Experience 2: Base Pairing Mini-Game
+    gameScore: 0,
+    gameTargetIdx: 0,
+    gameStreak: 0,
+    gameSlots: [
+      { base: 'A', paired: false, wrongAnim: 0 },
+      { base: 'G', paired: false, wrongAnim: 0 },
+      { base: 'T', paired: false, wrongAnim: 0 },
+      { base: 'C', paired: false, wrongAnim: 0 },
+      { base: 'A', paired: false, wrongAnim: 0 },
+      { base: 'C', paired: false, wrongAnim: 0 }
+    ],
+    particles: [],
+
+    // Experience 3: Zipper
+    zipperProgress: 0.0,
+    zipperRunning: false,
+    zipperSpeed: 0.004
+  };
+
+  /* ============================================================
+     CANVAS SIZING & PERSPECTIVE MATH
+  ============================================================ */
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+  window.addEventListener("resize", resizeCanvas, { passive: true });
+  resizeCanvas();
+
+  function project3D(x, y, z, cx, cy, fov = 380) {
+    const cosY = Math.cos(state.rotY);
+    const sinY = Math.sin(state.rotY);
+    const x1 = x * cosY - z * sinY;
+    const z1 = z * cosY + x * sinY;
+
+    const cosX = Math.cos(state.rotX);
+    const sinX = Math.sin(state.rotX);
+    const y2 = y * cosX - z1 * sinX;
+    const z2 = z1 * cosX + y * sinX;
+
+    const scale = fov / (fov + z2 + 200);
+    return {
+      x: cx + x1 * scale,
+      y: cy + y2 * scale,
+      z: z2,
+      scale: Math.max(0.1, scale)
+    };
+  }
+
+  const NUC_COLORS = {
+    A: { main: "#58e5ef", name: "Adenine", partner: "T", bonds: 2 },
+    T: { main: "#62e3a8", name: "Thymine", partner: "A", bonds: 2 },
+    G: { main: "#a78bff", name: "Guanine", partner: "C", bonds: 3 },
+    C: { main: "#ffa87d", name: "Cytosine", partner: "G", bonds: 3 }
+  };
+  const COMPLEMENT = { A: 'T', T: 'A', G: 'C', C: 'G' };
+
+  /* ============================================================
+     EXPERIENCE 1: CINEMATIC DNA FORMATION ANIMATION
+     5-Phase Animated Sequence:
+     1. Two separate molecular strands appear.
+     2. Four types of bases appear between them.
+     3. Matching bases move towards each other.
+     4. The connections form.
+     5. Both strands gradually twist into a double helix.
+  ============================================================ */
+  function renderFormation(W, H) {
+    const cx = W / 2;
+    const cy = H / 2;
+    const p = state.formationProgress; // 0 to 1
+
+    // Phase checks
+    const phase = p < 0.2 ? 1 : p < 0.4 ? 2 : p < 0.65 ? 3 : p < 0.85 ? 4 : 5;
+
+    // Update tasks checklist dynamically
+    if (phase >= 1) markTaskDone("f1");
+    if (phase >= 2) markTaskDone("f2");
+    if (phase >= 3) markTaskDone("f3");
+    if (phase >= 4) markTaskDone("f4");
+    if (phase >= 5) markTaskDone("f5");
+
+    const numBps = 18;
+    const totalH = H * 0.72;
+    const stepY = totalH / numBps;
+    const startY = -totalH / 2;
+
+    // Phase parameters
+    // Phase 1: Separate straight strands
+    // Phase 2: Bases appear floating
+    // Phase 3: Bases glide inward
+    // Phase 4: Bonds snap
+    // Phase 5: Helix twists
+    const strandSeparation = phase === 1 ? 140 : 110;
+    const baseFloatIn = Math.min(1, Math.max(0, (p - 0.2) / 0.2));
+    const baseSnapIn = Math.min(1, Math.max(0, (p - 0.4) / 0.25));
+    const twistProg = Math.min(1, Math.max(0, (p - 0.8) / 0.2));
+
+    const bps = [];
+
+    for (let i = 0; i < numBps; i++) {
+      const y = startY + i * stepY;
+      const angle = (i / numBps) * Math.PI * 3 * twistProg + state.time * 0.4;
+      const radius = 95 * (0.5 + 0.5 * twistProg);
+
+      // Strand 1 Position
+      const s1X = Math.cos(angle) * (radius * twistProg + strandSeparation * (1 - twistProg));
+      const s1Z = Math.sin(angle) * radius * twistProg;
+
+      // Strand 2 Position
+      const s2X = Math.cos(angle + Math.PI) * (radius * twistProg + strandSeparation * (1 - twistProg));
+      const s2Z = Math.sin(angle + Math.PI) * radius * twistProg;
+
+      const p1 = project3D(s1X, y, s1Z, cx, cy);
+      const p2 = project3D(s2X, y, s2Z, cx, cy);
+
+      // Bases moving inward
+      const base1 = ['A', 'T', 'G', 'C'][i % 4];
+      const base2 = COMPLEMENT[base1];
+
+      // Intermediate base positions
+      const b1Pos = {
+        x: p1.x + (p2.x - p1.x) * 0.38 * baseSnapIn,
+        y: p1.y + (p2.y - p1.y) * 0.38 * baseSnapIn
+      };
+      const b2Pos = {
+        x: p2.x + (p1.x - p2.x) * 0.38 * baseSnapIn,
+        y: p2.y + (p1.y - p2.y) * 0.38 * baseSnapIn
+      };
+
+      bps.push({
+        p1, p2, b1Pos, b2Pos,
+        z: (p1.z + p2.z) / 2,
+        base1, base2
+      });
+    }
+
+    // Sort by depth for 3D realism
+    bps.sort((a, b) => a.z - b.z);
+
+    // Draw connecting bonds if Phase >= 4
+    if (phase >= 4) {
+      for (const bp of bps) {
+        ctx.strokeStyle = `rgba(88,229,239,${0.25 + twistProg * 0.45})`;
+        ctx.lineWidth = 2 * bp.p1.scale;
+        ctx.beginPath();
+        ctx.moveTo(bp.b1Pos.x, bp.b1Pos.y);
+        ctx.lineTo(bp.b2Pos.x, bp.b2Pos.y);
+        ctx.stroke();
+      }
+    }
+
+    // Draw Backbones (Phase >= 1)
+    drawBackbone(bps.map(b => b.p1), "#1e7a9e", 5);
+    drawBackbone(bps.map(b => b.p2), "#453896", 5);
+
+    // Draw Bases (Phase >= 2)
+    if (baseFloatIn > 0) {
+      for (const bp of bps) {
+        const rad = 7.5 * bp.p1.scale * baseFloatIn;
+        drawSphere(bp.b1Pos.x, bp.b1Pos.y, rad, NUC_COLORS[bp.base1].main, bp.base1);
+        drawSphere(bp.b2Pos.x, bp.b2Pos.y, rad, NUC_COLORS[bp.base2].main, bp.base2);
+      }
+    }
+
+    // Active Phase Indicator on Canvas
+    const phaseNames = [
+      "1/5: Two Separate Strands Appear",
+      "2/5: Four Chemical Bases Appear",
+      "3/5: Matching Bases Move Inward",
+      "4/5: Chemical Connections Form",
+      "5/5: Strands Twist into 3D Double Helix"
+    ];
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "bold 11px 'Space Grotesk', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`PHASE ${phaseNames[phase - 1].toUpperCase()}`, cx, H - 24);
+
+    // Auto-advance formation sequence
+    if (!state.paused && state.formationAutoPlay) {
+      const speed = state.slowMo ? state.formationSpeed * 0.5 : state.formationSpeed;
+      state.formationProgress += speed;
+      if (state.formationProgress >= 1.0) {
+        state.formationProgress = 1.0;
+        state.formationAutoPlay = false;
+        soundSuccess();
+        setTimeout(() => {
+          GV.showAchievement(STAGES[1].trophy.title, STAGES[1].trophy.desc);
+        }, 500);
+      }
+    }
+  }
+
+  /* ============================================================
+     EXPERIENCE 2: THE PLAYABLE BASE PAIRING MINI-GAME
+     - A strand with missing bases
+     - Visitor must select complementary base (A↔T, G↔C)
+     - Immediate feedback, points scoring, streak, beginner hints
+     - Displays "DNA MATCHING COMPLETE!" on finish
+  ============================================================ */
+  function renderBasePairingGame(W, H) {
+    const cx = W / 2;
+    const cy = H / 2;
+
+    const slots = state.gameSlots;
+    const count = slots.length;
+    const spacing = 62;
+    const startY = cy - ((count - 1) * spacing) / 2;
+
+    // Center Connection Line
+    ctx.strokeStyle = "rgba(145,217,232,0.15)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(cx, startY - 30);
+    ctx.lineTo(cx, startY + count * spacing);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = "rgba(88,229,239,0.55)";
+    ctx.font = "8px 'DM Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("COMPLEMENTARY BONDING PLANE", cx, startY - 40);
+
+    slots.forEach((s, idx) => {
+      const y = startY + idx * spacing;
+      const leftX = cx - 120;
+      const rightX = cx + 120;
+
+      // Left Template Base (Permanent)
+      drawBaseCard(leftX, y, s.base, false, true);
+
+      // Right Target Socket (Missing base to solve)
+      const expectedPartner = COMPLEMENT[s.base];
+      const isCurrentTarget = (idx === state.gameTargetIdx);
+
+      if (s.paired) {
+        // Correct base snapped into position!
+        drawBaseCard(rightX, y, expectedPartner, true, false);
+
+        // Draw hydrogen bond connection lines
+        const bonds = NUC_COLORS[s.base].bonds;
+        drawHydrogenBonds(leftX + 44, rightX - 44, y, bonds);
+      } else {
+        // Empty socket awaiting player input
+        drawGhostSocket(rightX, y, expectedPartner, isCurrentTarget, s.wrongAnim);
+      }
+    });
+
+    // Particle sparks
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+      const p = state.particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.alpha -= 0.025;
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if (p.alpha <= 0) state.particles.splice(i, 1);
+    }
+
+    // Active Slot Prompt
+    const activeSlot = slots[state.gameTargetIdx];
+    if (activeSlot) {
+      const targetChar = activeSlot.base;
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "11px 'DM Mono', monospace";
+      ctx.fillText(`CURRENT CHALLENGE: MATCH PARTNER FOR BASE [ ${targetChar} ]`, cx, H - 24);
+    }
+  }
+
+  /* ============================================================
+     EXPERIENCE 3: THE DNA ZIPPER (STRAND SEPARATION)
+     - Shows complete double helix
+     - Highlights matching base bonds
+     - Visually distinct unzipping sequence peeling into 2 templates
+     - Explains template replication
+  ============================================================ */
+  function renderZipper(W, H) {
+    const cx = W / 2;
+    const cy = H / 2;
+    const totalRungs = 20;
+    const stepY = 24;
+    const startY = cy - 220;
+
+    const zipP = state.zipperProgress; // 0 = closed helix, 1 = fully unzipped
+    const splitIndex = Math.floor(zipP * totalRungs);
+
+    if (zipP > 0.05) markTaskDone("z1");
+    if (zipP > 0.3) markTaskDone("z2");
+    if (zipP >= 0.95) markTaskDone("z3");
+
+    ctx.textAlign = "center";
+
+    // Draw individual base pairs & peeling strands
+    for (let i = 0; i < totalRungs; i++) {
+      const y = startY + i * stepY;
+      const isSplit = i < splitIndex;
+
+      let spread = 0;
+      if (isSplit) {
+        // Strands peel apart in an organic 'Y' shape
+        const peelDist = (splitIndex - i) / 6;
+        spread = Math.min(160, peelDist * 42);
+      }
+
+      const x1 = cx - 36 - spread;
+      const x2 = cx + 36 + spread;
+
+      const base1 = ['A', 'G', 'T', 'C', 'A'][i % 5];
+      const base2 = COMPLEMENT[base1];
+
+      // If not yet unzipped, highlight hydrogen bonds
+      if (!isSplit) {
+        ctx.strokeStyle = "rgba(88,229,239,0.35)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x1 + 8, y);
+        ctx.lineTo(x2 - 8, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw base spheres
+      drawSphere(x1, y, 7.5, NUC_COLORS[base1].main, base1);
+      drawSphere(x2, y, 7.5, NUC_COLORS[base2].main, base2);
+    }
+
+    // Draw Helicase Enzyme Wedge at the splitting apex
+    const splitY = startY + splitIndex * stepY;
+    ctx.save();
+    ctx.translate(cx, splitY);
+
+    ctx.fillStyle = "rgba(255,200,80,0.95)";
+    ctx.beginPath();
+    ctx.moveTo(0, 16);
+    ctx.lineTo(26, -18);
+    ctx.lineTo(-26, -18);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "#020912";
+    ctx.font = "bold 9px 'DM Mono', monospace";
+    ctx.fillText("HELICASE", 0, -3);
+    ctx.restore();
+
+    // Callout explanations on the canvas
+    if (zipP >= 0.4) {
+      ctx.fillStyle = "rgba(88,229,239,0.8)";
+      ctx.font = "9px 'DM Mono', monospace";
+      ctx.fillText("← TEMPLATE STRAND 1", cx - 130, cy);
+      ctx.fillText("TEMPLATE STRAND 2 →", cx + 130, cy);
+    }
+
+    ctx.fillStyle = "rgba(255,200,80,0.85)";
+    ctx.font = "bold 11px 'DM Mono', monospace";
+    ctx.fillText(`HELICASE SEPARATION: ${Math.round(zipP * 100)}% · BONDS UNZIPPING`, cx, H - 24);
+
+    // Automatic unzipping step progression
+    if (state.zipperRunning && !state.paused) {
+      const speed = state.slowMo ? state.zipperSpeed * 0.5 : state.zipperSpeed;
+      state.zipperProgress += speed;
+      soundZip();
+      if (state.zipperProgress >= 1.0) {
+        state.zipperProgress = 1.0;
+        state.zipperRunning = false;
+        soundSuccess();
+        setTimeout(() => {
+          GV.showAchievement(STAGES[3].trophy.title, STAGES[3].trophy.desc);
+        }, 500);
+      }
+    }
+  }
+
+  /* ============================================================
+     DRAWING HELPERS (Spheres, Connectors, Shapes)
+  ============================================================ */
+  function drawSphere(x, y, radius, color, label) {
+    ctx.save();
+    const g = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+    g.addColorStop(0, "white");
+    g.addColorStop(0.35, color);
+    g.addColorStop(1, color + "55");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (label && radius > 5) {
+      ctx.fillStyle = "#020912";
+      ctx.font = `bold ${Math.max(7, radius * 1.05)}px 'Space Grotesk', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, x, y);
+    }
+    ctx.restore();
+  }
+
+  function drawBackbone(points, color, width) {
+    if (points.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBaseCard(x, y, base, isPaired, isLeft) {
+    const w = 70;
+    const h = 48;
+    const col = NUC_COLORS[base];
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    ctx.fillStyle = "rgba(7,25,42,0.85)";
+    ctx.strokeStyle = col.main;
+    ctx.lineWidth = isPaired ? 2.5 : 1.5;
+    roundRect(ctx, -w / 2, -h / 2, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = col.main;
+    ctx.font = "bold 20px 'Space Grotesk', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(base, 0, -4);
+
+    ctx.font = "7px 'DM Mono', monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.fillText(col.name.toUpperCase(), 0, 14);
+
+    ctx.restore();
+  }
+
+  function drawGhostSocket(x, y, expectedBase, isTarget, wrongAnim) {
+    const w = 70;
+    const h = 48;
+    const col = NUC_COLORS[expectedBase];
+
+    ctx.save();
+    ctx.translate(x + (wrongAnim ? Math.sin(wrongAnim * 20) * 8 : 0), y);
+
+    ctx.strokeStyle = isTarget ? col.main : "rgba(255,255,255,0.15)";
+    ctx.lineWidth = isTarget ? 2 : 1;
+    ctx.setLineDash([4, 4]);
+    ctx.fillStyle = isTarget ? "rgba(88,229,239,0.12)" : "rgba(0,0,0,0.2)";
+    roundRect(ctx, -w / 2, -h / 2, w, h, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = isTarget ? col.main : "rgba(255,255,255,0.25)";
+    ctx.font = "14px 'Space Grotesk', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(isTarget ? `[ ? ]` : `[ ${expectedBase} ]`, 0, 0);
+
+    ctx.restore();
+  }
+
+  function drawHydrogenBonds(x1, x2, y, count) {
+    ctx.save();
+    ctx.strokeStyle = "#58e5ef";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+
+    const offset = 6;
+    if (count === 2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y - offset); ctx.lineTo(x2, y - offset);
+      ctx.moveTo(x1, y + offset); ctx.lineTo(x2, y + offset);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x1, y - offset); ctx.lineTo(x2, y - offset);
+      ctx.moveTo(x1, y);          ctx.lineTo(x2, y);
+      ctx.moveTo(x1, y + offset); ctx.lineTo(x2, y + offset);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r);
+    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h);
+    c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r);
+    c.quadraticCurveTo(x, y, x + r, y);
+    c.closePath();
+  }
+
+  /* ============================================================
+     MAIN 60 FPS RENDER LOOP
+  ============================================================ */
+  function renderLoop() {
+    requestAnimationFrame(renderLoop);
+
+    // Skip canvas compute when modal is visible to preserve 0% CPU for DOM interaction
+    if (state.isModalOpen) return;
+
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    ctx.clearRect(0, 0, W, H);
+
+    if (!state.paused) {
+      const delta = state.slowMo ? 0.008 : 0.016;
+      state.time += delta;
+      state.rotY += 0.004;
+    }
+
+    switch(state.currentStage) {
+      case 1: renderFormation(W, H); break;
+      case 2: renderBasePairingGame(W, H); break;
+      case 3: renderZipper(W, H); break;
+    }
+  }
+  requestAnimationFrame(renderLoop);
+
+  /* ============================================================
+     TOUCH & POINTER DRAG (3D Rotation)
+  ============================================================ */
+  canvas.addEventListener("pointerdown", e => {
+    state.isDragging = true;
+    state.dragStartX = e.clientX;
+    state.dragStartY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+  }, { passive: true });
+
+  canvas.addEventListener("pointermove", e => {
+    if (!state.isDragging) return;
+    const dx = e.clientX - state.dragStartX;
+    const dy = e.clientY - state.dragStartY;
+    state.rotY += dx * 0.008;
+    state.rotX += dy * 0.008;
+    state.dragStartX = e.clientX;
+    state.dragStartY = e.clientY;
+  }, { passive: true });
+
+  canvas.addEventListener("pointerup", () => {
+    state.isDragging = false;
+  }, { passive: true });
+
+  /* ============================================================
+     UI CONTROLLER & STAGE ORCHESTRATION
+  ============================================================ */
+  function updateUIForStage(id) {
+    const s = STAGES[id];
+    state.currentStage = id;
+
+    // Header HUD
+    document.getElementById("stageBadge").textContent = s.badge;
+    document.getElementById("stageKicker").textContent = s.kicker;
+    document.getElementById("stageName").textContent = s.name;
+    document.getElementById("canvasModeLabel").textContent = s.modeLabel;
+
+    // Left info panel
+    document.getElementById("infoKicker").textContent = s.kicker;
+    document.getElementById("infoTitle").textContent = s.title;
+    document.getElementById("infoBody").innerHTML = s.body;
+    document.getElementById("analogyText").innerHTML = s.analogy;
+
+    // Game stats box toggle
+    const statsBox = document.getElementById("gameStatsBox");
+    statsBox.classList.toggle("hidden", id !== 2);
+
+    // Prompt
+    const promptBox = document.getElementById("gamePrompt");
+    promptBox.className = "game-prompt";
+    document.getElementById("promptText").textContent = s.prompt;
+
+    // Task checklist
+    const taskContainer = document.getElementById("taskChecklist");
+    taskContainer.innerHTML = s.tasks.map(t => `
+      <div class="task-item ${t.done ? 'done' : ''}" id="task-${t.id}">
+        <div class="task-check">${t.done ? '✓' : ''}</div>
+        <div>${t.text}</div>
+      </div>
+    `).join("");
+
+    // Stage pills
+    for (let i = 1; i <= 3; i++) {
+      const pill = document.getElementById(`pill-${i}`);
+      pill.classList.toggle("active", i === id);
+    }
+
+    // Next button label
+    const nextBtn = document.getElementById("nextStageBtn");
+    if (id === 1) nextBtn.textContent = "Next: Match the Bases →";
+    else if (id === 2) nextBtn.textContent = "Next: Unzip DNA →";
+    else nextBtn.textContent = "Complete Exhibition 🏆";
+
+    // Build right-panel action deck
+    buildActionDeck(id);
+
+    // Sync URL hash
+    if (window.location.hash !== "#stage-" + id) {
+      history.replaceState(null, "", "#stage-" + id);
+    }
+  }
+
+  function markTaskDone(id) {
+    const el = document.getElementById(`task-${id}`);
+    if (el && !el.classList.contains("done")) {
+      el.classList.add("done");
+      const check = el.querySelector(".task-check");
+      if (check) check.textContent = "✓";
+    }
+  }
+
+  function buildActionDeck(id) {
+    const deck = document.getElementById("actionDeck");
+    const title = document.getElementById("controlsTitle");
+    const subtitle = document.getElementById("controlsSubtitle");
+
+    if (id === 1) {
+      title.textContent = "Build Sequence Controls";
+      subtitle.textContent = "Step through the 5 phases or control the formation slider.";
+      deck.innerHTML = `
+        <div class="slider-group">
+          <div class="slider-head">
+            <span>FORMATION PROGRESS</span>
+            <small id="formVal">${Math.round(state.formationProgress * 100)}%</small>
+          </div>
+          <input type="range" class="slider-input" min="0" max="100" value="${Math.round(state.formationProgress * 100)}" id="formSlider" oninput="GV.onFormationSlider(this.value)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button class="tool-btn" onclick="GV.setFormationStep(0.1)">1. Strands</button>
+          <button class="tool-btn" onclick="GV.setFormationStep(0.3)">2. Bases</button>
+          <button class="tool-btn" onclick="GV.setFormationStep(0.55)">3. Align</button>
+          <button class="tool-btn" onclick="GV.setFormationStep(0.75)">4. Connect</button>
+        </div>
+        <button class="act-btn primary" onclick="GV.playFormationAnimation()">
+          <span>▶</span> Play Formation Sequence
+        </button>
+        <button class="act-btn secondary" onclick="GV.resetFormation()">
+          <span>↺</span> Replay from Beginning
+        </button>
+      `;
+    } else if (id === 2) {
+      title.textContent = "Base Selection Deck";
+      subtitle.textContent = "Choose the complementary nucleotide that bonds with the target.";
+      const targetSlot = state.gameSlots[state.gameTargetIdx];
+      const targetChar = targetSlot ? targetSlot.base : 'A';
+      deck.innerHTML = `
+        <div style="font:8px 'DM Mono',monospace;color:var(--dim);margin-bottom:4px">
+          TARGET BASE: <strong style="color:var(--cyan);font-size:12px">${targetChar} (${NUC_COLORS[targetChar].name})</strong>
+        </div>
+        <div class="puzzle-grid">
+          <button class="puzzle-btn base-A" onclick="GV.chooseBase('A')">
+            <span class="puzzle-letter">A</span>
+            <span class="puzzle-sub">ADENINE</span>
+            <span class="puzzle-bond">2 H-Bonds · Pairs with T</span>
+          </button>
+          <button class="puzzle-btn base-T" onclick="GV.chooseBase('T')">
+            <span class="puzzle-letter">T</span>
+            <span class="puzzle-sub">THYMINE</span>
+            <span class="puzzle-bond">2 H-Bonds · Pairs with A</span>
+          </button>
+          <button class="puzzle-btn base-G" onclick="GV.chooseBase('G')">
+            <span class="puzzle-letter">G</span>
+            <span class="puzzle-sub">GUANINE</span>
+            <span class="puzzle-bond">3 H-Bonds · Pairs with C</span>
+          </button>
+          <button class="puzzle-btn base-C" onclick="GV.chooseBase('C')">
+            <span class="puzzle-letter">C</span>
+            <span class="puzzle-sub">CYTOSINE</span>
+            <span class="puzzle-bond">3 H-Bonds · Pairs with G</span>
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="act-btn secondary" onclick="GV.showHint()" style="min-height:36px;font-size:11px">
+            <span>💡</span> Need a Hint?
+          </button>
+          <button class="act-btn secondary" onclick="GV.resetGame()" style="min-height:36px;font-size:11px">
+            <span>↺</span> Reset Game
+          </button>
+        </div>
+      `;
+    } else if (id === 3) {
+      title.textContent = "DNA Zipper Controls";
+      subtitle.textContent = "Unzip the double helix into two template strands.";
+      deck.innerHTML = `
+        <div class="slider-group">
+          <div class="slider-head">
+            <span>HELICASE POSITION</span>
+            <small id="zipVal">${Math.round(state.zipperProgress * 100)}%</small>
+          </div>
+          <input type="range" class="slider-input" min="0" max="100" value="${Math.round(state.zipperProgress * 100)}" id="zipSlider" oninput="GV.onZipperSlider(this.value)">
+        </div>
+        <button class="act-btn primary" onclick="GV.startUnzipping()">
+          <span>⚡</span> START UNZIPPING
+        </button>
+        <button class="act-btn secondary" onclick="GV.pauseUnzipping()">
+          <span>⏸</span> Pause Unzipping
+        </button>
+        <button class="act-btn secondary" onclick="GV.replayZipper()">
+          <span>↺</span> Replay Zipper
+        </button>
+      `;
+    }
+  }
+
+  /* ============================================================
+     PUBLIC API / EVENT HANDLERS (Window.GV)
+  ============================================================ */
+  window.GV = {
+    setStage(id) {
+      updateUIForStage(id);
+      playTone(440, "sine", 0.1, 0.1);
+    },
+
+    advanceStage() {
+      if (state.currentStage < 3) {
+        this.setStage(state.currentStage + 1);
+      } else {
+        this.showAchievement(
+          "GENOMEVERSE CHAMPION 🏆",
+          "Congratulations! You completed all 3 core DNA experiences: Formation, Base Pairing, and Strand Separation. You now understand the fundamental secret of life's code!"
+        );
+      }
+    },
+
+    replayCurrentStage() {
+      const id = state.currentStage;
+      if (id === 1) this.resetFormation();
+      else if (id === 2) this.resetGame();
+      else if (id === 3) this.replayZipper();
+      updateUIForStage(id);
+    },
+
+    // --- EXPERIENCE 1: FORMATION ---
+    onFormationSlider(val) {
+      state.formationProgress = val / 100;
+      document.getElementById("formVal").textContent = `${val}%`;
+    },
+    setFormationStep(step) {
+      state.formationProgress = step;
+      document.getElementById("formSlider").value = Math.round(step * 100);
+      document.getElementById("formVal").textContent = `${Math.round(step * 100)}%`;
+      playTone(500, "sine", 0.08, 0.1);
+    },
+    playFormationAnimation() {
+      state.formationProgress = 0;
+      state.formationAutoPlay = true;
+      state.paused = false;
+      document.getElementById("playPauseIcon").textContent = "⏸";
+      document.getElementById("playPauseText").textContent = "Pause";
+    },
+    resetFormation() {
+      state.formationProgress = 0;
+      state.formationAutoPlay = true;
+      STAGES[1].tasks.forEach(t => t.done = false);
+    },
+
+    // --- EXPERIENCE 2: THE BASE PAIRING GAME ---
+    chooseBase(chosen) {
+      const slot = state.gameSlots[state.gameTargetIdx];
+      if (!slot) return;
+
+      const expected = COMPLEMENT[slot.base];
+
+      if (chosen === expected) {
+        // Correct base matched!
+        soundSnap();
+        slot.paired = true;
+        state.gameScore += 100 + state.gameStreak * 25;
+        state.gameStreak++;
+
+        // Update score HUD
+        document.getElementById("statScore").textContent = `${state.gameScore} PTS`;
+        document.getElementById("statMatches").textContent = `${state.gameTargetIdx + 1} / 6`;
+
+        // Sparkle burst
+        const cx = canvas.clientWidth / 2;
+        const cy = canvas.clientHeight / 2 - ((state.gameSlots.length - 1) * 62) / 2 + state.gameTargetIdx * 62;
+        for (let i = 0; i < 22; i++) {
+          state.particles.push({
+            x: cx,
+            y: cy,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
+            size: Math.random() * 4 + 2,
+            alpha: 1,
+            color: NUC_COLORS[chosen].main
+          });
+        }
+
+        const promptBox = document.getElementById("gamePrompt");
+        promptBox.className = "game-prompt success";
+        document.getElementById("promptText").textContent = `✨ Correct! ${slot.base} pairs with ${chosen} (${NUC_COLORS[slot.base].bonds} hydrogen bonds)!`;
+
+        if (slot.base === 'A' || slot.base === 'T') markTaskDone("gA");
+        if (slot.base === 'G' || slot.base === 'C') markTaskDone("gG");
+
+        state.gameTargetIdx++;
+
+        if (state.gameTargetIdx >= state.gameSlots.length) {
+          // Game Completed!
+          markTaskDone("gAll");
+          soundSuccess();
+          setTimeout(() => {
+            GV.showAchievement(STAGES[2].trophy.title, STAGES[2].trophy.desc);
+          }, 600);
+        } else {
+          buildActionDeck(2);
+        }
+      } else {
+        // Incorrect base selected
+        soundWrong();
+        state.gameStreak = 0;
+        slot.wrongAnim = 1.0;
+        setTimeout(() => slot.wrongAnim = 0, 400);
+
+        const promptBox = document.getElementById("gamePrompt");
+        promptBox.className = "game-prompt error";
+        document.getElementById("promptText").textContent = `❌ ${slot.base} cannot bond with ${chosen}. Remember: A↔T and G↔C!`;
+      }
+    },
+
+    showHint() {
+      const slot = state.gameSlots[state.gameTargetIdx];
+      if (!slot) return;
+      const expected = COMPLEMENT[slot.base];
+      const bonds = NUC_COLORS[slot.base].bonds;
+      const promptBox = document.getElementById("gamePrompt");
+      promptBox.className = "game-prompt";
+      document.getElementById("promptText").textContent = `💡 HINT: ${slot.base} (${NUC_COLORS[slot.base].name}) matches ${expected} (${NUC_COLORS[expected].name}) via ${bonds} hydrogen bonds!`;
+      playTone(600, "sine", 0.15, 0.15);
+    },
+
+    resetGame() {
+      state.gameSlots.forEach(s => s.paired = false);
+      state.gameTargetIdx = 0;
+      state.gameScore = 0;
+      state.gameStreak = 0;
+      document.getElementById("statScore").textContent = "0 PTS";
+      document.getElementById("statMatches").textContent = "0 / 6";
+      buildActionDeck(2);
+    },
+
+    // --- EXPERIENCE 3: THE DNA ZIPPER ---
+    startUnzipping() {
+      state.zipperRunning = true;
+      state.paused = false;
+      document.getElementById("playPauseIcon").textContent = "⏸";
+      document.getElementById("playPauseText").textContent = "Pause";
+    },
+    pauseUnzipping() {
+      state.zipperRunning = false;
+    },
+    replayZipper() {
+      state.zipperProgress = 0;
+      state.zipperRunning = true;
+      state.paused = false;
+      STAGES[3].tasks.forEach(t => t.done = false);
+      document.getElementById("zipSlider").value = 0;
+      document.getElementById("zipVal").textContent = "0%";
+    },
+    onZipperSlider(val) {
+      state.zipperProgress = val / 100;
+      document.getElementById("zipVal").textContent = `${val}%`;
+      soundZip();
+    },
+
+    // --- GLOBAL CONTROLS ---
+    togglePlayPause() {
+      state.paused = !state.paused;
+      document.getElementById("playPauseIcon").textContent = state.paused ? "▶" : "⏸";
+      document.getElementById("playPauseText").textContent = state.paused ? "Play" : "Pause";
+      document.getElementById("canvasStatusText").textContent = state.paused ? "SIMULATION PAUSED" : "SIMULATION ACTIVE · 60 FPS";
+    },
+
+    toggleSlowMo() {
+      state.slowMo = !state.slowMo;
+      document.getElementById("slowMoText").textContent = state.slowMo ? "Slow-Mo: ON" : "Slow-Mo: OFF";
+      document.getElementById("slowMoBtn").classList.toggle("active", state.slowMo);
+    },
+
+    resetCamera() {
+      state.rotX = 0.12;
+      state.rotY = 0;
+    },
+
+    toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
+      document.getElementById("soundText").textContent = soundEnabled ? "SFX: ON" : "SFX: OFF";
+      if (soundEnabled) initAudio();
+    },
+
+    showGuide() {
+      document.getElementById("guideModal").classList.remove("hidden");
+    },
+    closeGuide() {
+      document.getElementById("guideModal").classList.add("hidden");
+    },
+
+    showAchievement(title, desc) {
+      state.isModalOpen = true;
+      document.getElementById("trophyTitle").textContent = title;
+      document.getElementById("trophyDesc").textContent = desc;
+      document.getElementById("achieveModal").classList.remove("hidden");
+    },
+    closeAchievement() {
+      state.isModalOpen = false;
+      document.getElementById("achieveModal").classList.add("hidden");
+    },
+    closeAchievementAndAdvance() {
+      this.closeAchievement();
+      this.advanceStage();
+    },
+
+    getState() {
+      return state;
+    }
+  };
+
+  // Keyboard Shortcuts
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      GV.closeAchievement();
+      GV.closeGuide();
+    }
+    if (e.key === " " && e.target.tagName !== "INPUT") {
+      e.preventDefault();
+      GV.togglePlayPause();
+    }
+    if (e.key >= "1" && e.key <= "3") {
+      GV.setStage(parseInt(e.key, 10));
+    }
+    if (e.key.toLowerCase() === "m") {
+      GV.toggleSound();
+    }
+    if (e.key.toLowerCase() === "r") {
+      GV.replayCurrentStage();
+    }
+  });
+
+  // URL Hash Deep Linking (#stage-1, #stage-2, #stage-3)
+  function checkHash() {
+    const match = (window.location.hash || "").match(/stage-(\d)/);
+    if (match) {
+      const id = parseInt(match[1], 10);
+      if (id >= 1 && id <= 3) {
+        GV.setStage(id);
+        return true;
+      }
+    }
+    return false;
+  }
+  window.addEventListener("hashchange", checkHash);
+
+  // Initial load
+  if (!checkHash()) {
+    updateUIForStage(1);
+  }
+
+})();
+</script>
+
+</body>
+</html>
