@@ -251,10 +251,259 @@ if (!sceneElement || !oldCell) {
     dnaGroup.add(rung);
   }
 
+  // CINEMATIC DNA COSMIC CORE
+  const cosmicCore = new THREE.Group();
+  const orbitRings = [];
+
+  for (let i = 0; i < 4; i++) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.95 + i * 0.12, 0.012, 8, 100),
+      new THREE.MeshBasicMaterial({
+        color: i % 2 ? 0x63eee0 : 0xa47bff,
+        transparent: true,
+        opacity: 0.65
+      })
+    );
+
+    ring.rotation.set(
+      Math.PI / 2 + i * 0.45,
+      i * 0.7,
+      i * 0.35
+    );
+
+    cosmicCore.add(ring);
+    orbitRings.push(ring);
+  }
+
+  // Molecular star field
+  const cosmicParticles = [];
+
+  for (let i = 0; i < 120; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.012 + Math.random() * 0.025, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: i % 3 === 0 ? 0xffffff : (i % 2 ? 0x63eee0 : 0xa47bff),
+        transparent: true,
+        opacity: 0.8
+      })
+    );
+
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 0.65 + Math.random() * 0.9;
+
+    particle.position.set(
+      Math.cos(angle) * radius,
+      (Math.random() - 0.5) * 2.4,
+      Math.sin(angle) * radius
+    );
+
+    cosmicCore.add(particle);
+    cosmicParticles.push(particle);
+  }
+
+  const coreLight = new THREE.PointLight(0x63eee0, 3, 5);
+  coreLight.position.set(0, 0, 0.5);
+  cosmicCore.add(coreLight);
+
+  cosmicCore.position.set(0, 0, 0.25);
+  cosmicCore.visible = false;
+  cellGroup.add(cosmicCore);
   dnaGroup.position.set(0, 0, 0.25);
   dnaGroup.visible = false;
   cellGroup.add(dnaGroup);
 
+  // LIVING CELL ANIMATION UPGRADE
+
+  // Moving 3D transport vesicles
+  const vesicles = [];
+
+  for (let i = 0; i < 12; i++) {
+    const vesicle = new THREE.Group();
+
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(0.075, 20, 16),
+      new THREE.MeshPhysicalMaterial({
+        color: 0x63eee0,
+        emissive: 0x126b70,
+        emissiveIntensity: 1.2,
+        roughness: 0.2,
+        metalness: 0.15
+      })
+    );
+
+    const shell = new THREE.Mesh(
+      new THREE.SphereGeometry(0.105, 20, 16),
+      new THREE.MeshBasicMaterial({
+        color: 0xa47bff,
+        transparent: true,
+        opacity: 0.22,
+        wireframe: true
+      })
+    );
+
+    vesicle.add(core);
+    vesicle.add(shell);
+    cellGroup.add(vesicle);
+
+    vesicles.push({
+      group: vesicle,
+      phase: i * (Math.PI * 2 / 12),
+      radius: 1.35 + (i % 3) * 0.18,
+      speed: 0.35 + (i % 4) * 0.09,
+      height: Math.sin(i * 2) * 0.75
+    });
+  }
+
+  // Soft membrane glow
+  const membraneGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(2.30, 48, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0x63eee0,
+      transparent: true,
+      opacity: 0.045,
+      wireframe: true
+    })
+  );
+
+  cellGroup.add(membraneGlow);
+
+  // End of living cell animation upgrade
+  // ADVANCED CELL SYSTEMS
+
+  // Endoplasmic Reticulum: branching membrane network
+  const erGroup = new THREE.Group();
+
+  const erMaterial = new THREE.MeshStandardMaterial({
+    color: 0x48a9d8,
+    emissive: 0x123c68,
+    emissiveIntensity: 0.8,
+    roughness: 0.3
+  });
+
+  for (let i = 0; i < 7; i++) {
+    const points = [];
+
+    for (let j = 0; j < 18; j++) {
+      const t = j / 17;
+      const angle = t * Math.PI * 2 + i * 0.85;
+
+      points.push(new THREE.Vector3(
+        Math.cos(angle) * (0.85 + i * 0.045),
+        Math.sin(angle * 1.7 + i) * 0.55,
+        Math.sin(angle) * (0.85 + i * 0.045)
+      ));
+    }
+
+    const curve = new THREE.CatmullRomCurve3(points);
+
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 64, 0.025, 8, false),
+      erMaterial
+    );
+
+    erGroup.add(tube);
+  }
+
+  erGroup.position.set(0, 0, 0.15);
+  erGroup.userData.name = "Endoplasmic Reticulum";
+  cellGroup.add(erGroup);
+
+  // Lysosomes
+  const lysosomes = [];
+
+  for (let i = 0; i < 5; i++) {
+    const lysosome = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 24, 20),
+      new THREE.MeshPhysicalMaterial({
+        color: 0xb879ff,
+        emissive: 0x5720a0,
+        emissiveIntensity: 1.1,
+        roughness: 0.25,
+        transparent: true,
+        opacity: 0.9
+      })
+    );
+
+    const angle = i * Math.PI * 0.4;
+
+    lysosome.position.set(
+      Math.cos(angle) * 1.35,
+      Math.sin(angle) * 1.1,
+      Math.sin(i * 2) * 0.5
+    );
+
+    lysosome.userData.name = "Lysosome";
+    cellGroup.add(lysosome);
+    lysosomes.push(lysosome);
+  }
+
+  // Cell membrane receptors
+  const receptors = [];
+
+  for (let i = 0; i < 10; i++) {
+    const angle = i * Math.PI * 2 / 10;
+    const direction = new THREE.Vector3(
+      Math.cos(angle),
+      Math.sin(angle),
+      Math.sin(i * 1.7) * 0.35
+    ).normalize();
+
+    const receptor = new THREE.Group();
+
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.035, 0.22, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0x63eee0,
+        emissive: 0x17665d
+      })
+    );
+
+    stem.position.y = 0.08;
+    receptor.add(stem);
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.075, 16, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0xa47bff,
+        emissive: 0x5420a0,
+        emissiveIntensity: 1
+      })
+    );
+
+    head.position.y = 0.21;
+    receptor.add(head);
+
+    receptor.position.copy(direction.clone().multiplyScalar(2.18));
+    receptor.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction
+    );
+
+    receptor.userData.name = "Cell Membrane Receptor";
+    cellGroup.add(receptor);
+    receptors.push(receptor);
+  }
+
+  // Signal transmission waves
+  const signalWaves = [];
+
+  for (let i = 0; i < 3; i++) {
+    const wave = new THREE.Mesh(
+      new THREE.TorusGeometry(0.3, 0.012, 8, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0x63eee0,
+        transparent: true,
+        opacity: 0.65
+      })
+    );
+
+    wave.position.set(0, 0, 0.4);
+    wave.visible = false;
+    cellGroup.add(wave);
+    signalWaves.push(wave);
+  }
+
+  // End of advanced cell systems
   // Mouse interaction and rotation
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -327,10 +576,12 @@ if (!sceneElement || !oldCell) {
       if (entering) {
         targetCameraZ = 3.8;
         dnaGroup.visible = true;
+        cosmicCore.visible = true;
         nucleusGlow.visible = false;
       } else {
         targetCameraZ = 8;
         dnaGroup.visible = false;
+        cosmicCore.visible = false;
         nucleusGlow.visible = true;
       }
     });
@@ -383,7 +634,65 @@ if (!sceneElement || !oldCell) {
     });
 
     dnaGroup.rotation.y = time * 0.5;
+    cosmicCore.rotation.y = time * 0.18;
+    cosmicCore.rotation.z = Math.sin(time * 0.4) * 0.12;
+    orbitRings.forEach((ring, i) => {
+      ring.rotation.z += 0.003 * (i + 1);
+    });
+    cosmicParticles.forEach((p, i) => {
+      p.position.y += Math.sin(time + i) * 0.0008;
+    });
+    coreLight.intensity = 2.5 + Math.sin(time * 2) * 1.2;
 
+    // Breathing cell membrane
+    const breath = 1 + Math.sin(time * 1.4) * 0.018;
+    membrane.scale.setScalar(breath);
+    membraneGlow.scale.setScalar(breath * 1.025);
+
+    // Mitochondrial energy pulses
+    mitochondria.forEach((item, i) => {
+      const pulse = 1 + Math.sin(time * 2.5 + i * 2) * 0.045;
+      item.scale.setScalar(pulse);
+    });
+
+    // Vesicles travelling through the cytoplasm
+    vesicles.forEach((v, i) => {
+      const angle = time * v.speed + v.phase;
+
+      v.group.position.set(
+        Math.cos(angle) * v.radius,
+        Math.sin(angle * 0.8) * 0.8 + v.height * 0.25,
+        Math.sin(angle) * v.radius * 0.65
+      );
+
+      const pulse = 1 + Math.sin(time * 3 + i) * 0.18;
+      v.group.scale.setScalar(pulse);
+      v.group.rotation.y = angle;
+    });
+    // ER gentle movement
+    erGroup.rotation.y = Math.sin(time * 0.25) * 0.08;
+    erGroup.rotation.z = Math.sin(time * 0.35) * 0.035;
+
+    // Lysosome pulsing
+    lysosomes.forEach((item, i) => {
+      const pulse = 1 + Math.sin(time * 2.2 + i) * 0.12;
+      item.scale.setScalar(pulse);
+    });
+
+    // Receptor glow animation
+    receptors.forEach((item, i) => {
+      item.children[1].material.emissiveIntensity =
+        0.6 + (Math.sin(time * 2 + i) + 1) * 0.7;
+    });
+
+    // Expanding signal waves
+    signalWaves.forEach((wave, i) => {
+      const phase = (time * 0.45 + i / 3) % 1;
+      wave.visible = true;
+      wave.scale.setScalar(0.5 + phase * 4);
+      wave.material.opacity = 0.55 * (1 - phase);
+      wave.rotation.z = time * 0.15 + i;
+    });
     nucleusGlow.scale.setScalar(1 + Math.sin(time * 2) * 0.025);
 
     camera.position.z += (targetCameraZ - camera.position.z) * 0.035;
@@ -395,3 +704,6 @@ if (!sceneElement || !oldCell) {
 
   console.log("CELL INVASION 3D: Three.js simulation initialized.");
 }
+
+
+

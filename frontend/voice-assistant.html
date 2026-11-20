@@ -1,0 +1,456 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GenomeAI — Voice Intelligence</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#030712;color:#eafaff;font-family:Arial,sans-serif;min-height:100vh}
+header{padding:24px 5%;display:flex;justify-content:space-between;border-bottom:1px solid #17344c}
+.brand{color:#58eee4;font-size:11px;letter-spacing:4px}
+header a{color:#70dce9;text-decoration:none;font-size:11px}
+main{max-width:1200px;margin:auto;padding:35px 5%}
+h1{font-size:clamp(27px,4vw,43px);letter-spacing:3px;margin:12px 0}
+.subtitle{color:#7295ae;font-size:11px;letter-spacing:3px}
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:35px}
+.visual,.chat{background:#081526;border:1px solid #183b55;border-radius:18px;padding:24px;min-height:480px}
+.visual{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#orb{width:100%;height:300px}
+.state{font-size:11px;letter-spacing:3px;color:#72eee5;margin-top:10px}
+.chat{display:flex;flex-direction:column}
+.chat h2{font-size:13px;letter-spacing:3px;color:#73e9e9}
+#messages{flex:1;overflow-y:auto;max-height:340px;padding:12px 0}
+.message{padding:13px 15px;margin:10px 0;border-radius:12px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.ai{background:#102b42;border-left:2px solid #36e5dc}
+.user{background:#1d2442;border-left:2px solid #a77aff}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+button{border:1px solid #278b9b;background:#0b2135;color:#bafffa;padding:13px 17px;font-size:10px;letter-spacing:1px;cursor:pointer;border-radius:8px}
+button:hover{background:#10516a;box-shadow:0 0 16px #00cfff33}
+.primary{background:linear-gradient(120deg,#087d8b,#49338c);border-color:#66e9ed}
+#question{width:100%;padding:15px;background:#030d19;color:white;border:1px solid #24516c;border-radius:8px;outline:none}
+#question:focus{border-color:#5cefe8}
+.small{font-size:10px;color:#63869e;line-height:1.7;margin-top:20px}
+.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.quick button{font-size:9px;padding:9px}
+.visual.listening #orb{filter:drop-shadow(0 0 25px #00eaff)}
+.visual.speaking #orb{filter:drop-shadow(0 0 35px #a35cff)}
+@media(max-width:750px){.workspace{grid-template-columns:1fr}.visual,.chat{min-height:390px}#orb{height:230px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand">GENOMEAI // VOICE INTELLIGENCE</div>
+ <a href="genome-sequencing-lab.html">← SEQUENCING LAB</a>
+</header>
+
+<main>
+ <div class="brand">YOUR SCIENTIFIC AI COMPANION</div>
+ <h1>VOICE INTELLIGENCE</h1>
+ <div class="subtitle">ASK. EXPLORE. DISCOVER.</div>
+
+ <div class="workspace">
+  <section class="visual" id="visual">
+   <div id="orb"></div>
+   <div class="state" id="state">● SYSTEM ONLINE</div>
+   <p class="small">Your GenomeAI assistant is ready.<br>Press the microphone and ask a scientific question.</p>
+   <div class="controls">
+    <button class="primary" id="mic">🎙 START SPEAKING</button>
+    <button id="stop">■ STOP AUDIO</button>
+   </div>
+  </section>
+
+  <section class="chat">
+   <h2>GENOMEAI CONVERSATION</h2>
+   <div id="messages">
+    <div class="message ai">Hello! I am GenomeAI. Ask me about DNA, genetics, genome sequencing, bioinformatics or any scientific topic.</div>
+   </div>
+
+   <form id="form">
+    <input id="question" placeholder="Ask your scientific question..." autocomplete="off">
+    <div class="controls">
+     <button class="primary" type="submit">SEND TO AI →</button>
+    </div>
+   </form>
+
+   <div class="quick">
+    <button data-q="Explain how DNA sequencing works.">DNA SEQUENCING</button>
+    <button data-q="What is a genome mutation?">MUTATIONS</button>
+    <button data-q="How does genome assembly work?">GENOME ASSEMBLY</button>
+   </div>
+   <div class="small" id="connection">Connecting to GenomeAI backend...</div>
+  </section>
+ </div>
+</main>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+/* Your existing deployed GenomeAI backend */
+const API = "https://genome-ai-1-o993.onrender.com";
+
+const $ = id => document.getElementById(id);
+const messages = $("messages");
+const visual = $("visual");
+const state = $("state");
+
+let history = [];
+let busy = false;
+
+function status(text,mode=""){
+ state.textContent=text;
+ visual.classList.remove("listening","speaking");
+ if(mode)visual.classList.add(mode);
+}
+
+function addMessage(text,type){
+ const div=document.createElement("div");
+ div.className="message "+type;
+ div.textContent=text;
+ messages.appendChild(div);
+ messages.scrollTop=messages.scrollHeight;
+}
+
+/* 3D AI ORB */
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,.1,100);
+camera.position.z=5;
+
+const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(340,300);
+$("orb").appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x7abaff,2));
+
+const glow=new THREE.PointLight(0x00dfff,45,12);
+glow.position.set(2,2,3);
+scene.add(glow);
+
+const core=new THREE.Mesh(
+ new THREE.IcosahedronGeometry(1.1,5),
+ new THREE.MeshPhysicalMaterial({
+  color:0x147fa9,
+  emissive:0x063c68,
+  emissiveIntensity:2,
+  metalness:.4,
+  roughness:.2,
+  wireframe:false
+ })
+);
+scene.add(core);
+
+const wire=new THREE.Mesh(
+ new THREE.IcosahedronGeometry(1.22,2),
+ new THREE.MeshBasicMaterial({
+  color:0x65f4ef,
+  wireframe:true,
+  transparent:true,
+  opacity:.45
+ })
+);
+scene.add(wire);
+
+const rings=[];
+for(let i=0;i<3;i++){
+ const ring=new THREE.Mesh(
+  new THREE.TorusGeometry(1.55+i*.13,.014,8,100),
+  new THREE.MeshBasicMaterial({color:i%2?0xa65cff:0x14e9ff})
+ );
+ ring.rotation.x=i*.8;
+ ring.rotation.y=i*.7;
+ scene.add(ring);
+ rings.push(ring);
+}
+
+let orbMode="idle";
+function animate(){
+ requestAnimationFrame(animate);
+ const t=performance.now()*.001;
+ core.rotation.y+=.005;
+ core.rotation.x+=.003;
+ wire.rotation.y-=.003;
+ rings.forEach((r,i)=>{
+  r.rotation.z+=.004*(i+1);
+  r.rotation.x+=.001;
+ });
+ const pulse=orbMode==="listening"?1.12:orbMode==="speaking"?1.18:1;
+ core.scale.setScalar(pulse+Math.sin(t*2)*.025);
+ glow.intensity=orbMode==="listening"?65:orbMode==="speaking"?80:35;
+ renderer.render(scene,camera);
+}
+animate();
+
+function setOrbMode(mode){
+ orbMode=mode;
+ if(mode==="listening")status("● LISTENING...","listening");
+ else if(mode==="thinking")status("◌ AI THINKING...");
+ else if(mode==="speaking")status("♫ SPEAKING...","speaking");
+ else status("● SYSTEM ONLINE");
+}
+
+/* AI VOICE OUTPUT */
+
+function speak(text){
+ if(!("speechSynthesis" in window)){
+  status("VOICE OUTPUT NOT SUPPORTED");
+  return;
+ }
+
+ window.speechSynthesis.cancel();
+
+ const clean=text
+  .replace(/[#*_`]/g,"")
+  .replace(/https?:\/\/\S+/g,"")
+  .replace(/\n+/g,". ");
+
+ const utterance=new SpeechSynthesisUtterance(clean);
+ utterance.lang="en-IN";
+ utterance.rate=.96;
+ utterance.pitch=1.03;
+
+ const voices=window.speechSynthesis.getVoices();
+ const voice=voices.find(v=>v.lang==="en-IN")
+  ||voices.find(v=>v.lang.startsWith("en-GB"))
+  ||voices.find(v=>v.lang.startsWith("en"));
+
+ if(voice)utterance.voice=voice;
+
+ utterance.onstart=()=>setOrbMode("speaking");
+ utterance.onend=()=>setOrbMode("idle");
+ utterance.onerror=()=>setOrbMode("idle");
+
+ window.speechSynthesis.speak(utterance);
+}
+
+/* SEND QUESTION TO YOUR AI BACKEND */
+
+async function sendMessage(text){
+ text=text.trim();
+ if(!text||busy)return;
+
+ busy=true;
+ $("question").value="";
+ addMessage(text,"user");
+ setOrbMode("thinking");
+
+ const stage=localStorage.getItem("genomeai_current_stage");
+ const contextualMessage=stage
+  ? `The visitor is currently viewing the ${stage} stage of the Genome Sequencing Command Center. Answer with that context when relevant. Visitor question: ${text}`
+  : text;
+
+ try{
+  const response=await fetch(API+"/chat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({
+    message:contextualMessage,
+    history:history.slice(-10),
+    mode:"questions"
+   })
+  });
+
+  const data=await response.json();
+
+  if(!response.ok){
+   throw new Error(data.detail||"AI backend request failed.");
+  }
+
+  if(!data.reply)throw new Error("The AI returned an empty response.");
+
+  const answer=data.reply;
+
+  history.push({role:"user",content:contextualMessage});
+  history.push({role:"assistant",content:answer});
+
+  addMessage(answer,"ai");
+  speak(answer);
+
+ }catch(error){
+  addMessage("Connection problem: "+error.message,"ai");
+  setOrbMode("idle");
+ }finally{
+  busy=false;
+ }
+}
+
+$("form").addEventListener("submit",e=>{
+ e.preventDefault();
+ sendMessage($("question").value);
+});
+
+document.querySelectorAll("[data-q]").forEach(button=>{
+ button.addEventListener("click",()=>sendMessage(button.dataset.q));
+});
+
+$("stop").onclick=()=>{
+ window.speechSynthesis.cancel();
+ setOrbMode("idle");
+};
+
+/* MICROPHONE INPUT */
+
+const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null;
+let finalTranscript="";
+
+if(Recognition){
+ recognition=new Recognition();
+ recognition.lang="en-IN";
+ recognition.interimResults=true;
+ recognition.continuous=false;
+
+ recognition.onstart=()=>{
+  finalTranscript="";
+  setOrbMode("listening");
+  $("mic").textContent="● LISTENING...";
+ };
+
+ recognition.onresult=event=>{
+  let interim="";
+  for(let i=event.resultIndex;i<event.results.length;i++){
+   const result=event.results[i];
+   if(result.isFinal)finalTranscript+=result[0].transcript;
+   else interim+=result[0].transcript;
+  }
+  $("question").value=finalTranscript+interim;
+ };
+
+ recognition.onend=()=>{
+  $("mic").textContent="🎙 START SPEAKING";
+  if(finalTranscript.trim()){
+   sendMessage(finalTranscript);
+  }else{
+   setOrbMode("idle");
+  }
+ };
+
+ recognition.onerror=event=>{
+  setOrbMode("idle");
+  $("mic").textContent="🎙 START SPEAKING";
+  addMessage("Microphone issue: "+event.error+". You can type your question instead.","ai");
+ };
+}else{
+ $("mic").disabled=true;
+ $("mic").textContent="MIC UNAVAILABLE";
+}
+
+$("mic").onclick=()=>{
+ if(!recognition){
+  addMessage("Speech recognition is not supported in this browser. Please type your question.","ai");
+  return;
+ }
+ if(busy)return;
+ try{recognition.start();}
+ catch(error){console.error(error);}
+};
+
+/* BACKEND CONNECTION CHECK */
+
+fetch(API+"/health")
+ .then(r=>r.json())
+ .then(data=>{
+  $("connection").textContent=
+   "● BACKEND ONLINE | AI CONFIGURED: "+(data.ai_configured?"YES":"CHECK");
+ })
+ .catch(()=>{
+  $("connection").textContent="Backend waking up or unavailable. Try again shortly.";
+ });
+
+/* GENOMEAI_GROQ_VOICE_PATCH */
+(() => {
+    function cleanVoiceText(text) {
+        return String(text || "")
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+            .replace(/^#{1,6}\s*/gm, "")
+            .replace(/\*\*(.*?)\*\*/g, "$1")
+            .replace(/__(.*?)__/g, "$1")
+            .replace(/[`*_]/g, "")
+            .replace(/^\s*[-+•]\s+/gm, "")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
+    }
+
+    const originalAddMessage = addMessage;
+    addMessage = function(text, type) {
+        return originalAddMessage(cleanVoiceText(text), type);
+    };
+
+    const browserVoiceFallback = speak;
+    let currentAudio = null;
+    let voiceSession = 0;
+
+    function splitVoiceText(text, limit = 185) {
+        const chunks = [];
+        let current = "";
+
+        for (const word of text.split(/\s+/)) {
+            if ((current + " " + word).trim().length > limit && current) {
+                chunks.push(current);
+                current = word;
+            } else {
+                current = (current + " " + word).trim();
+            }
+        }
+
+        if (current) chunks.push(current);
+        return chunks;
+    }
+
+    speak = async function(text) {
+        const cleaned = cleanVoiceText(text);
+        const session = ++voiceSession;
+
+        try {
+            for (const chunk of splitVoiceText(cleaned)) {
+                if (session !== voiceSession) return;
+
+                const response = await fetch(API.replace(/\/$/, "") + "/voice", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: chunk })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Voice API returned " + response.status);
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                currentAudio = audio;
+
+                try {
+                    await new Promise((resolve, reject) => {
+                        audio.addEventListener("ended", resolve, { once: true });
+                        audio.addEventListener("pause", resolve, { once: true });
+                        audio.addEventListener("error", reject, { once: true });
+                        audio.play().catch(reject);
+                    });
+                } finally {
+                    URL.revokeObjectURL(audioUrl);
+                }
+            }
+        } catch (error) {
+            console.error("Groq voice error:", error);
+            if (session === voiceSession) {
+                browserVoiceFallback(cleaned);
+            }
+        } finally {
+            if (session === voiceSession) currentAudio = null;
+        }
+    };
+
+    document.getElementById("stop")?.addEventListener("click", () => {
+        voiceSession++;
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+    });
+})();</script>
+</body>
+</html>
+

@@ -1,0 +1,289 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genome Quantum Chamber</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#030611;color:#eafaff;font-family:Arial,sans-serif;overflow:hidden}
+#scene{position:fixed;inset:0}
+.hud{position:fixed;z-index:5;inset:0;pointer-events:none;padding:30px}
+.brand{font-size:12px;letter-spacing:5px;color:#70f5ed}
+h1{font-size:clamp(27px,4vw,48px);letter-spacing:3px;margin:12px 0 5px;text-shadow:0 0 25px #00d9ff}
+.sub{color:#83a9c5;font-size:12px;letter-spacing:3px}
+.stats{position:absolute;right:32px;top:32px;text-align:right;font-size:11px;letter-spacing:2px;color:#73e9ed;line-height:2}
+.controls{position:absolute;bottom:35px;left:50%;transform:translateX(-50%);display:flex;gap:12px;pointer-events:auto;flex-wrap:wrap;justify-content:center;width:95%}
+button{background:rgba(7,25,43,.8);border:1px solid #27cbd4;color:#a9ffff;padding:14px 22px;letter-spacing:2px;font-size:10px;cursor:pointer;backdrop-filter:blur(10px);transition:.25s}
+button:hover{background:#0b5966;box-shadow:0 0 25px #00d9ff;transform:translateY(-3px)}
+#status{position:absolute;bottom:105px;left:50%;transform:translateX(-50%);color:#8af9f0;font-size:10px;letter-spacing:4px;white-space:nowrap}
+.corner{position:absolute;bottom:30px;left:30px;color:#496d8c;font-size:9px;letter-spacing:2px}
+@media(max-width:600px){.hud{padding:18px}.stats{top:110px;right:18px}.controls{bottom:20px}button{padding:12px 13px;font-size:9px}.corner{display:none}}
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div class="hud">
+  <div class="brand">GENOMEAI // EXPERIMENTAL VISUAL SYSTEM</div>
+  <h1>QUANTUM CHAMBER</h1>
+  <div class="sub">THE ARCHITECTURE OF LIFE</div>
+  <div class="stats">
+    <div>DNA STRUCTURE <span style="color:#fff">ACTIVE</span></div>
+    <div>BASE PAIRS <span style="color:#fff">36</span></div>
+    <div>GENOME SCAN <span style="color:#fff">LIVE</span></div>
+  </div>
+  <div id="status">INITIALIZING MOLECULAR FIELD...</div>
+  <div class="controls">
+    <button id="scan">◈ ACTIVATE SCANNER</button>
+    <button id="unzip">⇆ UNZIP DNA</button>
+    <button id="rebuild">✧ REBUILD HELIX</button>
+    <button id="rotate">Ⅱ PAUSE ROTATION</button>
+<button id="sequencing" style="background:linear-gradient(135deg,#075d72,#44217c);border-color:#8bdeff;">
+  🧬 ENTER SEQUENCING LAB →
+</button>
+  </div>
+  <div class="corner">DRAG TO ROTATE · GENOME VISUALIZATION</div>
+</div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x030611,0.025);
+
+const camera = new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,100);
+camera.position.set(0,0,17);
+
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.5;
+document.getElementById("scene").appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0x6a9bbd,1.4));
+const blueLight=new THREE.PointLight(0x00cfff,100,35);
+blueLight.position.set(-6,5,7);scene.add(blueLight);
+const purpleLight=new THREE.PointLight(0x923cff,100,35);
+purpleLight.position.set(6,-4,-5);scene.add(purpleLight);
+
+const chamber=new THREE.Group();
+scene.add(chamber);
+
+const dna=new THREE.Group();
+chamber.add(dna);
+
+const radius=2.15, height=10.5, turns=5.5, count=36;
+const strandA=[],strandB=[];
+
+function point(t,side){
+  const angle=t*turns*Math.PI*2;
+  return new THREE.Vector3(
+    radius*Math.cos(angle+side*Math.PI),
+    (t-.5)*height,
+    radius*Math.sin(angle+side*Math.PI)
+  );
+}
+
+for(let i=0;i<=220;i++){
+  const t=i/220;
+  strandA.push(point(t,0));
+  strandB.push(point(t,1));
+}
+
+function tube(points,color){
+  const curve=new THREE.CatmullRomCurve3(points);
+  const mesh=new THREE.Mesh(
+    new THREE.TubeGeometry(curve,700,.075,10,false),
+    new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.8,metalness:.5,roughness:.2})
+  );
+  dna.add(mesh);
+  return mesh;
+}
+
+tube(strandA,0x00eaff);
+tube(strandB,0xb56cff);
+
+const rungs=[];
+const sphereGeo=new THREE.SphereGeometry(.105,12,12);
+const rungMaterials=[
+  new THREE.MeshStandardMaterial({color:0x7affc8,emissive:0x087b55,emissiveIntensity:2}),
+  new THREE.MeshStandardMaterial({color:0xffb36b,emissive:0x8c3d12,emissiveIntensity:2}),
+  new THREE.MeshStandardMaterial({color:0x65bfff,emissive:0x124b9b,emissiveIntensity:2}),
+  new THREE.MeshStandardMaterial({color:0xff75cf,emissive:0x7d145b,emissiveIntensity:2})
+];
+
+for(let i=0;i<count;i++){
+  const t=(i+.5)/count;
+  const a=point(t,0),b=point(t,1);
+  const direction=new THREE.Vector3().subVectors(b,a);
+  const material=rungMaterials[i%4];
+  const rod=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,1,8),material);
+  rod.position.copy(a).add(b).multiplyScalar(.5);
+  rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.clone().normalize());
+  rod.scale.y=direction.length();
+  dna.add(rod);
+
+  const beadA=new THREE.Mesh(sphereGeo,material);
+  beadA.position.copy(a);dna.add(beadA);
+  const beadB=new THREE.Mesh(sphereGeo,material);
+  beadB.position.copy(b);dna.add(beadB);
+
+  rungs.push({rod,a:beadA,b:beadB,originalA:a.clone(),originalB:b.clone()});
+}
+
+// Molecular energy particles
+const particleCount=1600;
+const positions=new Float32Array(particleCount*3);
+const particleGeo=new THREE.BufferGeometry();
+for(let i=0;i<particleCount;i++){
+  positions[i*3]=(Math.random()-.5)*15;
+  positions[i*3+1]=(Math.random()-.5)*17;
+  positions[i*3+2]=(Math.random()-.5)*12;
+}
+particleGeo.setAttribute("position",new THREE.BufferAttribute(positions,3));
+const particleMat=new THREE.PointsMaterial({color:0x55ddff,size:.035,transparent:true,opacity:.8});
+const particles=new THREE.Points(particleGeo,particleMat);
+chamber.add(particles);
+
+// Scanner ring
+const scanner=new THREE.Mesh(
+  new THREE.TorusGeometry(3.1,.035,12,120),
+  new THREE.MeshBasicMaterial({color:0x54fff0})
+);
+scanner.rotation.x=Math.PI/2;
+chamber.add(scanner);
+
+const scannerGlow=new THREE.PointLight(0x00ffff,20,8);
+chamber.add(scannerGlow);
+
+// Orbiting energy rings
+const rings=[];
+for(let i=0;i<4;i++){
+  const ring=new THREE.Mesh(
+    new THREE.TorusGeometry(4.5+i*.42,.012,8,150),
+    new THREE.MeshBasicMaterial({color:i%2?0x9b59ff:0x00dfff,transparent:true,opacity:.55})
+  );
+  ring.rotation.x=Math.PI/(3+i);
+  ring.rotation.y=i*.8;
+  chamber.add(ring);rings.push(ring);
+}
+
+// Floating genomic nodes
+const nodes=[];
+for(let i=0;i<18;i++){
+  const node=new THREE.Mesh(
+    new THREE.IcosahedronGeometry(.09+Math.random()*.12,1),
+    new THREE.MeshStandardMaterial({color:i%2?0x9b65ff:0x00eaff,emissive:i%2?0x471b80:0x006c88,emissiveIntensity:2})
+  );
+  const angle=i/18*Math.PI*2;
+  node.position.set(Math.cos(angle)*4.1,(Math.random()-.5)*10,Math.sin(angle)*4.1);
+  chamber.add(node);nodes.push(node);
+}
+
+// Decorative DNA field rings
+const field=new THREE.Group();
+for(let i=0;i<12;i++){
+  const ring=new THREE.Mesh(
+    new THREE.TorusGeometry(5.8+i*.08,.008,6,120),
+    new THREE.MeshBasicMaterial({color:0x245b88,transparent:true,opacity:.28})
+  );
+  ring.rotation.x=Math.PI/2;
+  ring.position.y=(i-6)*.8;
+  field.add(ring);
+}
+chamber.add(field);
+
+let scanActive=false,unzipped=false,paused=false;
+let targetX=0,targetY=0,dragging=false,lastX=0,lastY=0;
+const status=document.getElementById("status");
+
+document.getElementById("scan").onclick=()=>{
+  scanActive=!scanActive;
+  status.textContent=scanActive?"GENOME SCANNER // ACTIVE":"SCANNER // STANDBY";
+};
+
+document.getElementById("unzip").onclick=()=>{
+  unzipped=true;
+  status.textContent="DNA DOUBLE HELIX // SEPARATING STRANDS";
+};
+
+document.getElementById("rebuild").onclick=()=>{
+  unzipped=false;
+  status.textContent="GENETIC STRUCTURE // RECONSTRUCTING";
+};
+
+document.getElementById("sequencing").onclick=()=>{window.location.href="genome-sequencing-lab.html";};
+document.getElementById("rotate").onclick=()=>{
+  paused=!paused;
+  document.getElementById("rotate").textContent=paused?"▶ RESUME ROTATION":"Ⅱ PAUSE ROTATION";
+};
+
+renderer.domElement.addEventListener("pointerdown",e=>{
+  dragging=true;lastX=e.clientX;lastY=e.clientY;
+});
+window.addEventListener("pointerup",()=>dragging=false);
+window.addEventListener("pointermove",e=>{
+  if(!dragging)return;
+  targetY+=(e.clientX-lastX)*.006;
+  targetX+=(e.clientY-lastY)*.006;
+  lastX=e.clientX;lastY=e.clientY;
+});
+
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const time=clock.getElapsedTime();
+
+  if(!paused){
+    dna.rotation.y+=.003;
+    particles.rotation.y+=.00025;
+    rings.forEach((r,i)=>{r.rotation.z+=.0015*(i+1);r.rotation.y+=.001;});
+    nodes.forEach((n,i)=>{
+      n.position.y+=Math.sin(time*1.5+i)*.003;
+      n.rotation.x+=.008;n.rotation.y+=.012;
+    });
+  }
+
+  chamber.rotation.y+=(targetY-chamber.rotation.y)*.045;
+  chamber.rotation.x+=(targetX-chamber.rotation.x)*.045;
+
+  scanner.position.y=scanActive?Math.sin(time*1.2)*5:Math.sin(time*.3)*.4;
+  scanner.rotation.z=time*.4;
+  scannerGlow.position.copy(scanner.position);
+  scannerGlow.intensity=scanActive?35:8;
+
+  rungs.forEach((r,i)=>{
+    const separation=unzipped?1.8:0;
+    const wave=unzipped?Math.sin(time*2+i*.2)*.18:0;
+    const a=r.originalA.clone();
+    const b=r.originalB.clone();
+    const dir=a.clone().sub(b).normalize();
+    a.addScaledVector(dir,separation+wave);
+    b.addScaledVector(dir,-separation-wave);
+    r.a.position.lerp(a,.09);
+    r.b.position.lerp(b,.09);
+    r.rod.position.copy(r.a.position).add(r.b.position).multiplyScalar(.5);
+    const diff=r.b.position.clone().sub(r.a.position);
+    r.rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),diff.clone().normalize());
+    r.rod.scale.y=diff.length();
+  });
+
+  blueLight.intensity=90+Math.sin(time*2)*20;
+  purpleLight.intensity=85+Math.cos(time*1.5)*20;
+
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+<a href="voice-assistant.html" style="position:fixed;top:22px;left:22px;z-index:99999;padding:13px 18px;background:linear-gradient(120deg,#087d8b,#49338c);border:1px solid #70eafa;border-radius:8px;color:white;text-decoration:none;font:11px Arial;letter-spacing:2px;box-shadow:0 0 20px #00cfff44">✦ OPEN VOICE AI</a>
+</body>
+</html>
+
+

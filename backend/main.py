@@ -1,7 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Literal
+import os
+import httpx
 
 from .ai_engine import generate_genome_insight, is_ai_configured
 from .chat_engine import generate_chat_reply
@@ -276,3 +278,46 @@ def chat(request: ChatRequest):
             status_code=502,
             detail="GenomeBot could not generate a response. Please try again."
         )
+
+
+# GENOMEAI_ORPHEUS_VOICE_ENDPOINT
+
+class VoiceRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=200)
+
+@app.post("/voice")
+def generate_voice(request: VoiceRequest):
+    api_key = os.getenv("GROQ_API_KEY")
+
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Voice service is not configured.")
+
+    try:
+        result = httpx.post(
+            "https://api.groq.com/openai/v1/audio/speech",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "canopylabs/orpheus-v1-english",
+                "voice": "daniel",
+                "input": request.text,
+                "response_format": "wav"
+            },
+            timeout=60.0
+        )
+        result.raise_for_status()
+        return Response(content=result.content, media_type="audio/wav")
+
+    except httpx.HTTPStatusError as error:
+        raise HTTPException(
+            status_code=502,
+            detail="AI voice generation failed."
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=502,
+            detail="Could not connect to AI voice service."
+        )
+
