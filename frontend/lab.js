@@ -1,4 +1,4 @@
-/* Genome Intelligence Lab - standalone page logic, reuses script.js apiGet(). */
+﻿/* Genome Intelligence Lab - standalone page logic, reuses script.js apiGet(). */
 (() => {
   "use strict";
 
@@ -128,7 +128,7 @@
     $("labError").classList.add("hidden");
     $("labContent").classList.remove("hidden");
 
-    $("fingerprintName").textContent = `${g.common_name || g.scientific_name} — ${g.scientific_name}`;
+    $("fingerprintName").textContent = `${g.common_name || g.scientific_name} â€” ${g.scientific_name}`;
 
     for (const base of ["A", "T", "G", "C"]) {
       const count = Number(counts[base] || 0);
@@ -195,7 +195,7 @@
     select.innerHTML =
       '<option value="">Select organism...</option>' +
       ORGANISMS.map(
-        (o) => `<option value="${esc(o.name)}">${esc(o.label)} — ${esc(o.name)}</option>`
+        (o) => `<option value="${esc(o.name)}">${esc(o.label)} â€” ${esc(o.name)}</option>`
       ).join("");
   }
 
@@ -374,5 +374,19 @@
     fillCompareSelect($("compareB"));
     $("compareA").addEventListener("change", runCompare);
     $("compareB").addEventListener("change", runCompare);
+
+    // Receive the selected organism from the Organisms page.
+    const requestedOrganism = new URLSearchParams(location.search).get("organism");
+
+    if (requestedOrganism) {
+      $("compareA").value = requestedOrganism;
+
+      const selectedButton = [...document.querySelectorAll(".lab-org-btn")]
+        .find(button => button.dataset.organism === requestedOrganism);
+
+      if (selectedButton) {
+        selectOrganism(selectedButton);
+      }
+    }
   });
 })();

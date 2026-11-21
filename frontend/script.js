@@ -1,4 +1,4 @@
-/* GenomeAI - one shared interaction layer for every page. */
+﻿/* GenomeAI - one shared interaction layer for every page. */
 (() => {
   "use strict";
 
@@ -566,7 +566,7 @@ function initHeader() {
           showModal("KNOWLEDGE PROFILE", "Amoeba proteus", `<p>A free-living amoebozoan example used to teach cell shape, movement and feeding.</p><p>Open the profile through the knowledge/exploration interface.</p>`);
           return profile;
         }
-        go("analysis.html", { organism: name });
+        go("lab.html", { organism: name });
       });
     });
 
