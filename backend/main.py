@@ -39,6 +39,18 @@ app.add_middleware(
 )
 
 
+
+# ==========================================
+# GENOME LIBRARY INITIALIZATION
+# ==========================================
+
+@app.on_event("startup")
+def initialize_genome_library():
+    if os.getenv("RENDER") or os.getenv("GENOME_LIBRARY_PATH"):
+        from .genome_downloader import download_genomes
+        print("GENOMEAI: Preparing reference genomes...")
+        download_genomes()
+        print("GENOMEAI: Genome preparation finished.")
 # ==========================================
 # CHATBOT REQUEST MODEL
 # ==========================================
@@ -332,4 +344,7 @@ def generate_voice(request: VoiceRequest):
             status_code=502,
             detail="Could not connect to AI voice service."
         )
+
+
+
 

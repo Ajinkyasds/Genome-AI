@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 GENOME_DATABASE = {
@@ -102,21 +103,40 @@ def search_genome(name):
             return genome
     return None
 
+
 def find_genome_library():
+    # 1. Check the path configured on the hosting platform
+    configured_path = os.getenv("GENOME_LIBRARY_PATH")
+
+    if configured_path:
+        folder = Path(configured_path).expanduser()
+        if folder.exists() and folder.is_dir():
+            return folder
+
+    # 2. Fall back to the local project directories
     backend_folder = Path(__file__).parent
-    possible_names = ["genome_library", "genome_library1", "Genome Library", "Genome Library 1"]
+    possible_names = [
+        "genome_library",
+        "genome_library1",
+        "Genome Library",
+        "Genome Library 1"
+    ]
+
     for name in possible_names:
         folder = backend_folder / name
         if folder.exists() and folder.is_dir():
             return folder
+
+    # 3. Search other genome-library folders
     for folder in backend_folder.iterdir():
         if not folder.is_dir():
             continue
-        n = folder.name.lower().replace(" ", "_")
-        if "genome" in n and "library" in n:
-            return folder
-    return None
 
+        normalized = folder.name.lower().replace(" ", "_")
+        if "genome" in normalized and "library" in normalized:
+            return folder
+
+    return None
 def get_genome_files(genome):
     library = find_genome_library()
     if library is None:
@@ -128,3 +148,5 @@ def get_genome_files(genome):
     for extension in ("*.fna", "*.fasta", "*.fa"):
         files.extend(organism_folder.rglob(extension))
     return files
+
+
